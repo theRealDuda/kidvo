@@ -297,10 +297,13 @@ async function run(name) {
   // opened later starts in that band without asking, and an app without age bands (Vo) cannot change it.
   await step('the age band chosen in one game reaches every game', async () => {
     if (await page.evaluate(() => window.kidvoShell.band()) !== 'investigators') throw new Error('the desktop did not remember the band');
-    for (const id of ['secret-keeper', 'nonsense']) {
+    for (const id of ['secret-keeper', 'nonsense', 'sorter']) {
       const r = await appFrame(page, id).evaluate(() => ({ band: kidvo.band, attr: document.documentElement.dataset.band }));
       if (r.band !== 'investigators' || r.attr !== 'investigators') throw new Error(`${id} did not hear it: ${JSON.stringify(r)}`);
     }
+    // Investigators hear SORT-1's confidence in per cent (Explorers hear "very sure", checked on the phone below).
+    const said = await appFrame(page, 'sorter').evaluate(() => { window.__sorter.learn(); return window.__sorter.says('greenapple'); });
+    if (!/\d+\s*%/.test(said)) throw new Error(`Investigators' SORT-1 gave no percentage: "${said}"`);
     const remembered = await appFrame(page, 'pet').evaluate(() => kidvo.setBand('explorers'));
     if (remembered !== false || await page.evaluate(() => window.kidvoShell.band()) !== 'investigators') throw new Error('Vo changed the age band');
     const later = await desk.newPage();
@@ -442,6 +445,17 @@ async function run(name) {
         .catch(() => { throw new Error('the second time, the round did not start'); });
       if (await f.evaluate(() => !!document.querySelector('#overlay .howto'))) throw new Error('the how-to card came back');
       await close();
+    });
+    // Explorers have not learned percentages yet: SORT-1 says it is "very sure" instead.
+    if (label === 'phone') await step("an Explorer's SORT-1 gives no percentage", async () => {
+      await phone.evaluate(() => window.kidvoShell.openApp('sorter'));
+      await phone.waitForTimeout(700);
+      const f = appFrame(phone, 'sorter');
+      if (!f) throw new Error('game did not load');
+      await handshake(f);
+      const said = await f.evaluate(() => { window.__sorter.learn(); return window.__sorter.says('greenapple'); });
+      if (/%/.test(said)) throw new Error(`an Explorer hears a percentage: "${said}"`);
+      await phone.evaluate(() => document.querySelectorAll('.win').forEach(w => w.querySelector('[data-act="close"]').click()));
     });
 
     for (const app of windowApps) {

@@ -61,6 +61,10 @@
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
   .earned span { font: 800 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
   .rule { padding: 9px 11px; background: var(--sunny); border: 2px solid var(--ink); font-weight: 700; }
+  .ask { font-weight: 700; }
+  .choices { display: grid; gap: 8px; }
+  .verdict { margin: 0; padding: 9px 12px; border: 2px dashed var(--ink); background: var(--good); font-weight: 600; }
+  .verdict.bad { background: var(--bad); }
   /* The age picker comes before anyone knows who is playing, so a 7-year-old must be able to read it too. */
   .btn.band { font-size: 16px; } .btn.band small { font-size: 14px; }
   /* How to play (Explorers, once): a picture and one short line per rule. */
@@ -383,17 +387,25 @@
       const s = el('div', 'stat'); s.append(el('span', null, t('statKept')), el('span', null, t('ofTotal', { n: kept, total })));
       card.append(s);
       if (earned.length) { const e = el('div', 'earned'); for (const b of earned) e.append(el('span', null, t(b))); card.append(e); }
-      card.append(el('p', null, tv('reflect')));
+      // Explorers answer whether friendly made it safe. Investigators carry it over to a case of their own:
+      // an app that wants a selfie (sharing for fun, asking first, or sending and hoping it is deleted).
+      const apply = band === 'investigators';
+      card.append(el('p', apply ? 'ask' : null, apply ? t('applyQ') : tv('reflect')));
       if (answered === null) {
-        const row = el('div', 'row');
-        for (const [label, val] of [[t('yes'), true], [t('no'), false]]) {
+        const row = el('div', apply ? 'choices' : 'row');
+        const options = apply ? ['applyA', 'applyB', 'applyC'].map(k => [t(k), k]) : [[t('yes'), true], [t('no'), false]];
+        for (const [label, val] of options) {
           const b = el('button', 'btn alt', label); b.type = 'button';
           b.addEventListener('click', () => { answered = val; showOverlay(view); });
           row.append(b);
         }
         card.append(row);
+      } else if (apply) {
+        card.append(el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered)), el('p', null, t('friendlyNote')));
       } else {
         card.append(el('p', null, tv(answered ? 'fb_yes' : 'fb_no')));
+      }
+      if (answered !== null) {
         if (promised) card.append(el('p', null, t('fb_' + promised)));
         card.append(el('p', 'rule', tv('rule')));
         const again = el('button', 'btn', t('again')); again.type = 'button';
