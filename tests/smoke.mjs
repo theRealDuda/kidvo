@@ -370,6 +370,19 @@ async function run(name) {
       await handshake(f);
       await sp.waitForFunction(() => window.__spoken.some(s => s.voice === 'Device' && s.text.includes('?')), null, { timeout: 4000 })
         .catch(() => { throw new Error('the question was not read aloud'); });
+      // What a game passes: lines are read as sentences; a card reads its data-say parts, else its lines, a number
+      // staying with its label.
+      await f.evaluate(() => {
+        const card = document.createElement('div'), answered = document.createElement('div');
+        card.innerHTML = '<h2>Done</h2><p>Your steps</p><p>12</p><button>Next</button>';
+        answered.innerHTML = '<h2>Done</h2><p data-say>Only this</p>';
+        document.body.append(card, answered);
+        kidvo.speak(['One', 'Two?']); kidvo.speak(card); kidvo.speak(answered);
+        card.remove(); answered.remove();
+      });
+      const want = ['One. Two?', 'Done. Your steps 12. Next.', 'Only this.'];
+      await sp.waitForFunction(w => w.every(x => window.__spoken.some(s => s.text === x)), want, { timeout: 3000 })
+        .catch(async () => { throw new Error(`lines and cards read as ${JSON.stringify(await sp.evaluate(() => window.__spoken.slice(-3).map(s => s.text)))}`); });
       await sp.evaluate(() => window.kidvoShell.setLang('hu'));
       if (await sp.locator('#speak').isVisible()) throw new Error('a read-aloud switch for a language that has only a network voice');
       const before = await sp.evaluate(() => window.__spoken.length);

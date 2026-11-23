@@ -133,8 +133,16 @@
     }
     if (typeof Element === 'function' && what instanceof Element) {
       const marked = [...what.querySelectorAll('[data-say]')];
-      // Each line on screen (a heading, a button, a row) becomes a sentence, so the voice pauses between them.
-      return speakable(marked.length ? marked.map(n => n.textContent) : what.innerText.split('\n'));
+      if (marked.length) return speakable(marked.map(n => n.textContent));
+      // Each line on screen (a heading, a button, a row) becomes a sentence, so the voice pauses between them;
+      // a line that starts with a number is the value of the label before it ("Your steps 12", not "Your steps. 12.").
+      const lines = [];
+      for (const raw of what.innerText.split('\n')) {
+        const line = raw.trim();
+        if (!line) continue;
+        if (/^\d/.test(line) && lines.length) lines[lines.length - 1] += ' ' + line; else lines.push(line);
+      }
+      return speakable(lines);
     }
     return String(what).replace(/\s+/g, ' ').trim();
   }
