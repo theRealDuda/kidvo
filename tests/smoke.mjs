@@ -296,10 +296,13 @@ async function run(name) {
   // A child chooses who is playing once. The choice made in Robot Maze above reaches the other open games, a game
   // opened later starts in that band without asking, and an app without age bands (Vo) cannot change it.
   await step('the age band chosen in one game reaches every game', async () => {
-    if (await page.evaluate(() => window.kidvoShell.band()) !== 'investigators') throw new Error('the desktop did not remember the band');
+    // The choice travels by message, and Robot Maze's run above sends it in one burst with its other messages:
+    // WebKit can still be delivering them when that step ends, so wait for it rather than read it at once.
+    await page.waitForFunction(() => window.kidvoShell.band() === 'investigators', null, { timeout: 3000 })
+      .catch(() => { throw new Error('the desktop did not remember the band'); });
     for (const id of ['secret-keeper', 'nonsense', 'sorter']) {
-      const r = await appFrame(page, id).evaluate(() => ({ band: kidvo.band, attr: document.documentElement.dataset.band }));
-      if (r.band !== 'investigators' || r.attr !== 'investigators') throw new Error(`${id} did not hear it: ${JSON.stringify(r)}`);
+      await appFrame(page, id).waitForFunction(() => kidvo.band === 'investigators' && document.documentElement.dataset.band === 'investigators', null, { timeout: 3000 })
+        .catch(() => { throw new Error(`${id} did not hear it`); });
     }
     // Investigators hear SORT-1's confidence in per cent (Explorers hear "very sure", checked on the phone below).
     const said = await appFrame(page, 'sorter').evaluate(() => { window.__sorter.learn(); return window.__sorter.says('greenapple'); });
