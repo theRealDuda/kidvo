@@ -647,15 +647,8 @@
     $('overlay').replaceChildren(view());
     $('overlay').hidden = false;
     focusCard();
-    readCard();
-  }
-  // Read aloud (when the player switched it on in the top bar): a new card is read whole; after an answer,
-  // only the lines marked data-say (the feedback), not the whole card again.
-  function readCard() {
-    const c = $('overlay').querySelector('.card');
-    if (!c) return;
-    const marked = [...c.querySelectorAll('[data-say]')];
-    kidvo.speak(marked.length ? marked.map(n => n.textContent).join(' ') : c.innerText, { fresh: true });
+    // Read aloud: a new card whole; after an answer, only the feedback (marked data-say).
+    kidvo.speak($('overlay').querySelector('.card'), { fresh: true });
   }
   // Focus the card itself, not its first button: a highlighted answer nudges the child. Tab reaches the buttons.
   function focusCard() { const c = $('overlay').querySelector('.card'); if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); } }

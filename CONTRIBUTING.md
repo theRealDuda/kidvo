@@ -99,7 +99,8 @@ kidvo.onLang(lang => {})        // re-render texts when the language changes
 kidvo.band                      // who is playing: 'explorers', 'investigators', or null until a child chose
 kidvo.onBand(band => {})        // now, and when a child changes it (in your game or another one)
 kidvo.setBand('explorers')      // the child chose in your game; <html data-band="..."> follows for your CSS
-kidvo.speak('Is it true?')       // read aloud, if the player switched it on (never speechSynthesis: CI blocks it)
+kidvo.speak('Is it true?')       // read aloud if the player switched it on: a line, [lines] or a card element
+                                // (never speechSynthesis: CI blocks it)
 kidvo.store.get / set           // up to 32 KB per game, in the visitor's browser
 kidvo.emit('solved', {...})     // others hear "my-game:solved"
 kidvo.on('maze:solved', fn)     // listen to other games

@@ -606,6 +606,7 @@
           <li>${t('priv3')} <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">${t('privacyGithub')}</a></li>
         </ul>
         <h3>${t('gamesH')}</h3>
+        <p>${t('gamesModes')}</p>
         <ul class="game-list">
           ${games().map(app => `<li><span><b>${esc(appText(app, 'name'))}</b> <small>${app.bands.map(b => t(b)).join(' · ')}</small></span>
             <button class="btn alt" type="button" data-parents="${esc(app.id)}">${t('parentsGuide')}</button></li>`).join('')}

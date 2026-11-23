@@ -22,9 +22,12 @@
  *                              K ink, W white, R coral, Y yellow, and your own in opts.colors ({ G: '#7be0c3' }).
  *                              Returns an inline <svg>; opts.scale: 3 makes every pixel 3px (without it your CSS
  *                              sets the size). Pixels of the letter opts.led get class="led" for your CSS to blink.
- *   kidvo.speak(text, {fresh}) read a line aloud when the player switched read-aloud on (in the top bar), with a voice
- *                              that runs on the device only; fresh: true drops what was still waiting to be read.
- *                              Resolves true if it will be read. Games never use speechSynthesis themselves.
+ *   kidvo.speak(what, {fresh}) read aloud when the player switched it on (in the top bar), with a voice that runs on
+ *                              the device only. what: a line; a list of lines (read as sentences, a full stop added
+ *                              where one is missing, e.g. the labels of the choices); or an element: the parts marked
+ *                              data-say if it has any (what an answer added to a card), else all of its text.
+ *                              fresh: true drops what was still waiting to be read. Resolves true if it will be read.
+ *                              Games never use speechSynthesis themselves (CI blocks it).
  *   kidvo.store.get/set/remove small per-app storage kept in the visitor's browser
  *   kidvo.setHotspot(rect)     overlays only: one clickable spot {x, y, w, h} (max 140x140); clicks arrive as "shell:poke"
  *                              ({ x, y, long }: long is true for a long press, a right-click or the context-menu key)
@@ -121,6 +124,21 @@
     return svg;
   }
 
+  /* ---------- what to read aloud ---------- */
+  // A line as it is; lines as sentences; an element's lines marked data-say, or else all of its text.
+  function speakable(what) {
+    if (what == null) return '';
+    if (Array.isArray(what)) {
+      return what.map(speakable).filter(Boolean).map(s => (/[.!?…:]$/.test(s) ? s : s + '.')).join(' ');
+    }
+    if (typeof Element === 'function' && what instanceof Element) {
+      const marked = [...what.querySelectorAll('[data-say]')];
+      // Each line on screen (a heading, a button, a row) becomes a sentence, so the voice pauses between them.
+      return speakable(marked.length ? marked.map(n => n.textContent) : what.innerText.split('\n'));
+    }
+    return String(what).replace(/\s+/g, ' ').trim();
+  }
+
   const post = msg => { if (!standalone) window.parent.postMessage(Object.assign({ kidvo: 1 }, msg), '*'); };
   const matches = (p, t) => p === '*' || p === t || (p.endsWith(':*') && t.startsWith(p.slice(0, -1)));
 
@@ -181,8 +199,10 @@
     setModal(on) { post({ kind: 'modal', on: !!on }); },
     onLang(fn) { langFns.add(fn); try { fn(lang); } catch (err) { console.error('[kidvo]', err); } return () => langFns.delete(fn); },
     // Silent until the desktop said hello: a card drawn before that (who is playing) is gone a moment later.
-    speak: (text, opts = {}) => (standalone || !info || text == null ? Promise.resolve(false)
-      : call('speak', String(text), opts.fresh === true).catch(() => false)),
+    speak(what, opts = {}) {
+      const text = speakable(what);
+      return standalone || !info || !text ? Promise.resolve(false) : call('speak', text, opts.fresh === true).catch(() => false);
+    },
     get band() { return band; },
     onBand(fn) { bandFns.add(fn); try { fn(band); } catch (err) { console.error('[kidvo]', err); } return () => bandFns.delete(fn); },
     // Takes effect here at once; the desktop's answer only says whether it was remembered for the other games.

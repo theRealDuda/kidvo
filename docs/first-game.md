@@ -76,6 +76,10 @@ kidvo.emit('judged', { right: true })  // a call the child made
 kidvo.emit('caught', {})               // a wrong AI answer caught (the panel's "Not right?" already sends it)
 ```
 
+**Explorers and Investigators.** The desktop asks once who is playing and tells every game: read `kidvo.band` (`explorers`, 7 to 9, or `investigators`, 10 to 13). Many Explorers are still learning to read, so give them bigger letters (`[data-band="explorers"]` in your CSS), fewer words per step (a shorter text under `<key>_explorers`) and, the first time, a "how to play" card with a picture per rule. A game for both bands shows its own "Who is playing?" card only while `kidvo.band` is `null` and passes the choice on with `kidvo.setBand`; Robot Maze shows the pattern.
+
+**Read aloud.** A switch in the top bar reads the games aloud for children who cannot read yet. Call `kidvo.speak(...)` with what a child must hear to play: a line, a list of lines (the choices) or an element (a card). It does nothing unless the switch is on, and it uses voices on the device only, so never use `speechSynthesis` yourself (CI blocks it). The practice-AI panel reads its own answers; the template reads its question.
+
 **Save progress if you need to** with `kidvo.store.get` and `kidvo.store.set` (up to 32 KB, only in this browser).
 
 **Phones.** Every game must fit a 360 px wide screen without sideways scrolling, use buttons at least 44 px tall on touch screens (`@media (pointer: coarse)`) and stay playable in a short landscape screen (`@media (max-height: 480px)`). Robot Maze (`apps/maze`) shows one way: its practice AI slides up as a drawer on phones.

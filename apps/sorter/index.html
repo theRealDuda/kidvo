@@ -277,10 +277,7 @@
   let lastSay = null;
   // Read aloud (when the player switched it on in the top bar). SORT-1 says its line, then `more`: what the screen
   // asks of the child, so a child who cannot read yet still knows what to do.
-  const read = (text, fresh = false) => { if (text) kidvo.speak(text, { fresh }); };
-  // Choices read one after another as sentences (some already end in a full stop).
-  const sentences = xs => xs.map(x => (/[.!?…]$/.test(x.trim()) ? x : x + '.')).join(' ');
-  const readVerdict = () => read($('stage').querySelector('.verdict')?.textContent, true);
+  const readVerdict = () => kidvo.speak($('stage').querySelector('.verdict'), { fresh: true });
   async function say(key, vars, more) {
     lastSay = [key, vars];
     $('bot').classList.add('thinking');
@@ -288,7 +285,7 @@
     await wait(450);
     $('bot').classList.remove('thinking');
     $('says').textContent = t(key, vars);
-    read(more ? `${t(key, vars)} ${more}` : t(key, vars), true);
+    kidvo.speak([t(key, vars)].concat(more || []), { fresh: true });
   }
   // A new screen starts at the top; a repaint of the same screen (a label tapped, a language switch) keeps the
   // child where they were, scroll and keyboard focus, so labelling the fruit further down never jumps back up.
@@ -348,7 +345,7 @@
 
   function intro() {
     phase = 0; stepKeys = inv() ? STEPS_INV : STEPS; memory = []; scores = { test1: 0, test2: 0, judged: 0, judgedTotal: 0, why: null, mislabelled: 0 };
-    say('hello', null, `${t('introTitle')}. ${t('introHint')}`);
+    say('hello', null, [t('introTitle'), t('introHint')]);
     show(() => [el('h2', null, t('introTitle')), el('p', 'hint', t('introHint')), button('start', 'btn', () => teach(TEACH1, 1))]);
   }
 
@@ -356,7 +353,7 @@
   function teach(kinds, round) {
     phase = round === 3 && inv() ? 4 : round === 2 ? 2 : 0;
     const items = round === 3 ? kinds : shuffle(kinds.map((k, n) => ({ ...make(k, n), label: null })));
-    say(round === 2 ? 'teachSay2' : 'teachSay1', null, `${t(round === 2 ? 'teachTitle2' : 'teachTitle1')} ${t('teachNeed')}`);
+    say(round === 2 ? 'teachSay2' : 'teachSay1', null, [t(round === 2 ? 'teachTitle2' : 'teachTitle1'), t('teachNeed')]);
     show(() => {
       const ready = items.every(i => i.label !== null);
       const go = button('teachBtn', 'btn', async () => {
@@ -467,7 +464,7 @@
       // were wrong, SORT-1 learned those mistakes (whyD), and the fix is to correct them in its memory.
       const bad = scores.mislabelled > 0;
       const correct = bad ? 'whyD' : 'whyB';
-      say(bad ? 'sayTaught' : 'saySure', null, `${t('results', { n: right, total: results.length })} ${t('whyQ')} ${sentences(whys().map(k => t(k)))}`);
+      say(bad ? 'sayTaught' : 'saySure', null, [t('results', { n: right, total: results.length }), t('whyQ'), ...whys().map(k => t(k))]);
       let picked = null;
       show(() => {
         const out = [el('h2', null, t('results', { n: right, total: results.length })), resultStrip(results), memoryStrip()];
@@ -531,7 +528,7 @@
     if (scores.test2 === total) earned.push('badgeTeacher');
     if (scores.judged === scores.judgedTotal) earned.push('badgeEye');
     kidvo.emit('done', { before: scores.test1, after: scores.test2 });
-    say(FINAL[trend].say, null, `${t(FINAL[trend].title)} ${t(FINAL[trend].lesson)}` + (inv() ? ` ${t('thinkQ')} ${sentences(['thinkB', 'thinkA', 'thinkC'].map(k => t(k)))}` : ''));
+    say(FINAL[trend].say, null, [t(FINAL[trend].title), t(FINAL[trend].lesson), ...(inv() ? [t('thinkQ'), ...['thinkB', 'thinkA', 'thinkC'].map(k => t(k))] : [])]);
     let thought = null; // Investigators' answer to the real case
     show(() => {
       const out = [el('h2', null, t(FINAL[trend].title)), resultStrip(results), memoryStrip(), bars([['before', scores.test1, ''], ['after', scores.test2, ' after']], total),
@@ -588,7 +585,7 @@
     const right = results.filter(r => r.sortRight).length;
     const perfect = right === total;
     kidvo.emit('done', { round: 3, score: right });
-    say(perfect ? 'sayThanks' : 'saySure', null, `${t('results', { n: right, total })} ${t(perfect ? 'r3VerdictGood' : 'r3VerdictMore')}`);
+    say(perfect ? 'sayThanks' : 'saySure', null, [t('results', { n: right, total }), t(perfect ? 'r3VerdictGood' : 'r3VerdictMore')]);
     show(() => {
       const out = [el('h2', null, t('results', { n: right, total })), resultStrip(results), memoryStrip(),
         bars([['after', scores.test2, ' after'], ['yours', right, '']], total), el('p', 'lesson', t(perfect ? 'r3VerdictGood' : 'r3VerdictMore'))];
@@ -607,7 +604,7 @@
     $('overlay').replaceChildren(render());
     $('overlay').hidden = false;
     const card = $('overlay').querySelector('.card');
-    if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); read(card.innerText, true); }
+    if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); kidvo.speak(card, { fresh: true }); }
   }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; $('overlay').replaceChildren(); }
   function renderFooter() {

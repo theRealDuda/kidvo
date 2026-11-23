@@ -14,6 +14,10 @@
   html, body { margin: 0; height: 100%; }
   body { display: grid; grid-template-columns: 1fr 260px; font: 16px/1.4 system-ui, sans-serif; background: #f4f5fb; color: #191833; }
   main { display: grid; place-items: center; font-size: 28px; font-weight: 800; }
+  /* Explorers (7–9) are still learning to read: bigger, plain letters for everything they read. The desktop sets
+     data-band on <html> ("explorers" or "investigators"), so per-band looks are plain CSS. */
+  [data-band="explorers"] body { font-size: 18px; }
+  [data-band="explorers"] main { font-size: 34px; }
   /* Phones, short landscape screens and fingers: kidvo games must work on all of them. */
   @media (max-width: 560px) { body { grid-template-columns: 1fr; grid-template-rows: 1fr 55%; } }
   @media (max-height: 480px) { main { font-size: 22px; } }
@@ -54,6 +58,16 @@
     document.getElementById('question').textContent = t('question');
     ai.setText(aiText());
   });
+  // Read the question aloud for children who cannot read it yet. kidvo.speak does nothing unless the player switched
+  // read-aloud on in the top bar; it takes a line, a list of lines (choices) or an element (a card). The practice-AI
+  // panel reads its own answers.
+  kidvo.ready(() => kidvo.speak(t('question'), { fresh: true }));
+
+  // Who is playing: kidvo.band is 'explorers' (7–9) or 'investigators' (10–13), chosen once for every game.
+  // This game is for Explorers only (manifest "bands"). A game for both bands reads kidvo.band and kidvo.onBand,
+  // shows its own "Who is playing?" card only while kidvo.band is null, and passes the child's choice on with
+  // kidvo.setBand (Robot Maze shows how). Explorers get fewer words: a shorter text can live under '<key>_explorers',
+  // and a picture-first "how to play" card the first time helps (Secret Keeper's begin() shows one).
 </script>
 </body>
 </html>

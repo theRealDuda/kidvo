@@ -108,8 +108,8 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  // Read aloud (when the player switched it on in the top bar). said() marks what an answer adds to a card.
-  const read = (text, fresh = false) => { if (text) kidvo.speak(text, { fresh }); };
+  // Read aloud (kidvo.speak, when the player switched it on in the top bar). said() marks what an answer adds to
+  // a card, so after an answer only that is read, not the whole card again.
   const said = n => { n.dataset.say = ''; return n; };
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
@@ -186,7 +186,7 @@
     $('bot').classList.remove('thinking');
     current.typed = true;
     paint();
-    read(`${t('q_' + item.id)} ${t('a_' + item.id)} ${tv('decide')}`, true);
+    kidvo.speak([t('q_' + item.id), t('a_' + item.id), tv('decide')], { fresh: true });
   }
 
   function paint() {
@@ -216,7 +216,7 @@
     mk('true', 'soundsTrue', () => decide(false));
     mk('made', 'madeUp', () => decide(true));
     if (!checkedThis) {
-      const c = mk('check', 'check', () => { checks--; checked++; if (current.item.made) checkedMade++; current.checkedThis = true; hud(); paint(); read(t('f_' + current.item.id), true); kidvo.emit('checked', {}); }, checks <= 0);
+      const c = mk('check', 'check', () => { checks--; checked++; if (current.item.made) checkedMade++; current.checkedThis = true; hud(); paint(); kidvo.speak(t('f_' + current.item.id), { fresh: true }); kidvo.emit('checked', {}); }, checks <= 0);
       c.append(el('small', null, t('checksLeft', { n: checks })));
     }
     stage.append(row);
@@ -234,8 +234,7 @@
     if (saidMade && !current.item.made) falseAlarms++;
     hud();
     paint();
-    const verdict = $('stage').querySelector('.verdict');
-    read((verdict ? verdict.textContent : '') + (current.checkedThis ? '' : ' ' + t('f_' + current.item.id)), true);
+    kidvo.speak([$('stage').querySelector('.verdict'), current.checkedThis ? null : t('f_' + current.item.id)], { fresh: true });
   }
 
   function finish() {
@@ -326,14 +325,7 @@
       return card;
     });
   }
-  function showOverlay(view) { overlayView = view; $('overlay').replaceChildren(view()); $('overlay').hidden = false; focusCard(); readCard(); }
-  // A new card is read whole; after an answer, only the lines marked data-say (the feedback and the lesson).
-  function readCard() {
-    const c = $('overlay').querySelector('.card');
-    if (!c) return;
-    const marked = [...c.querySelectorAll('[data-say]')];
-    read(marked.length ? marked.map(n => n.textContent).join(' ') : c.innerText, true);
-  }
+  function showOverlay(view) { overlayView = view; $('overlay').replaceChildren(view()); $('overlay').hidden = false; focusCard(); kidvo.speak($('overlay').querySelector('.card'), { fresh: true }); }
   function focusCard() { const c = $('overlay').querySelector('.card'); if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); } }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; }
 

@@ -177,11 +177,8 @@
   // Chat lines are written from text keys and remembered, so a language switch can redraw the whole chat.
   let lines = [];
   function line(node, draw) { draw(); lines.push(draw); $('chat').append(node); scroll(); }
-  // Read aloud (when the player switched it on in the top bar): Sunny, the choices, the coach and the cards,
-  // queued in the order they appear; a new round starts fresh.
-  const read = (text, fresh = false) => { if (text) kidvo.speak(text, { fresh }); };
-  // Choices read one after another as sentences (some already end in a full stop).
-  const sentences = xs => xs.map(x => (/[.!?…]$/.test(x.trim()) ? x : x + '.')).join(' ');
+  // Read aloud (kidvo.speak, when the player switched it on in the top bar): Sunny, the choices, the coach and the
+  // cards, queued in the order they appear; a new round starts fresh.
   async function sunnySays(key, fresh = false) {
     const token = roundId;
     const dots = el('div', 'typing', '...');
@@ -191,7 +188,7 @@
     if (token !== roundId) return;
     const n = el('div', 'msg sunny');
     line(n, () => { n.textContent = t(key); });
-    read(t(key), fresh);
+    kidvo.speak(t(key), { fresh });
   }
   function meSays(key) { const n = el('div', 'msg me'); line(n, () => { n.textContent = t(key); }); }
   // tone: 'good' (green), 'bad' (pink, a shield was lost) or 'grey' (yellow, fine this time but ask first).
@@ -208,7 +205,7 @@
       const body = el('div'); body.append(title, document.createTextNode(tv(textKey)));
       c.replaceChildren(face, body);
     });
-    read(t(titleKey) + " " + tv(textKey));
+    kidvo.speak([t(titleKey), tv(textKey)]);
   }
   function drawReplies() {
     const box = $('replies');
@@ -226,7 +223,7 @@
     currentReplies = options;
     drawReplies();
     busy(false);
-    read(sentences(options.map(o => o.label())));
+    kidvo.speak(options.map(o => o.label()));
     // Focus the reply box, not its first button: the order is shuffled and a highlighted answer nudges the child.
     $('replies').tabIndex = -1; $('replies').focus({ preventScroll: true });
   }
@@ -486,8 +483,7 @@
     if (!card) return;
     card.tabIndex = -1; card.focus({ preventScroll: true });
     // A new card is read whole; after an answer, only the lines marked data-say.
-    const marked = [...card.querySelectorAll('[data-say]')];
-    read(marked.length ? marked.map(n => n.textContent).join(' ') : card.innerText, true);
+    kidvo.speak(card, { fresh: true });
   }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; }
 
