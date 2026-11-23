@@ -4,7 +4,7 @@ kidvoStrings('en', {
   goal: 'reach the star in as few steps as you can',
   stepsCount_one: '{n} step',
   stepsCount_other: '{n} steps',
-  canvas: 'Maze. Use the arrow keys or W A S D to move the red square to the yellow star.',
+  canvas: 'Maze. Use the arrow keys or W A S D to move the robot to the yellow star.',
   padLabel: 'Direction buttons',
   up: 'Up', down: 'Down', left: 'Left', right: 'Right',
   totals: 'brain power {brain} · detective {detective} · shortest {shortest} · best level {best}',

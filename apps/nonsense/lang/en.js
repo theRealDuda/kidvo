@@ -1,5 +1,5 @@
 kidvoStrings('en', {
-  tag: 'practice AI · always sounds sure',
+  tag: 'Practice AI · always sounds sure',
   progress: 'question {n} of {total} · score {score}',
   checksLeft_one: '{n} library check left',
   checksLeft_other: '{n} library checks left',

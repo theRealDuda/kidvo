@@ -1,5 +1,5 @@
 kidvoStrings('en', {
-  tag: 'practice AI · learns only from your examples',
+  tag: 'Practice AI · learns only from your examples',
   step_teach: 'Teach', step_test: 'Test', step_fix: 'Fix', step_retest: 'Test again',
   hello: 'Hello. I am SORT-1. I sort fruit into APPLE and NOT APPLE. I do not know anything yet.',
   introTitle: 'You are the teacher',

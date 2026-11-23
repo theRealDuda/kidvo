@@ -1,5 +1,5 @@
 kidvoStrings('hu', {
-  tag: 'gyakorló AI · csak a te példáidból tanul',
+  tag: 'Gyakorló AI · csak a te példáidból tanul',
   step_teach: 'Tanítás', step_test: 'Próba', step_fix: 'Javítás', step_retest: 'Új próba',
   hello: 'Helló. SORT-1 vagyok. A gyümölcsöket ALMA és NEM ALMA csoportba válogatom. Még semmit sem tudok.',
   introTitle: 'Te vagy a tanár',

@@ -1,5 +1,5 @@
 kidvoStrings('en', {
-  label: 'practice AI · nothing you choose is sent anywhere',
+  label: 'Practice AI · nothing you choose is sent anywhere',
   label_explorers: 'Practice AI · only a game',
   progress: 'question {n} of {total}',
   shieldsAria: '{n} shields left',

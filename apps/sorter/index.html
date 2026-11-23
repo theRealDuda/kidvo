@@ -18,11 +18,12 @@
   html, body { margin: 0; height: 100%; }
   body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); display: flex; flex-direction: column; }
   .bot { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--panel); color: var(--text); border-bottom: 2px solid var(--ink); font-family: var(--mono); }
-  .eye { width: 14px; height: 14px; margin-top: 3px; flex: none; background: var(--led); box-shadow: 0 0 0 3px #4a2030, 0 0 10px var(--led); }
-  .bot.thinking .eye { animation: blink .5s steps(2) infinite; }
+  .face { width: 36px; height: 36px; flex: none; }
+  .face svg { display: block; width: 100%; height: 100%; }
+  .bot.thinking .face .led { animation: blink .5s steps(2) infinite; }
   @keyframes blink { 50% { opacity: .25; } }
   .bot-name { font-weight: 800; letter-spacing: .06em; }
-  .bot-tag { color: var(--dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+  .bot-tag { color: var(--dim); font-size: 11.5px; }
   .bot-says { flex: 1; min-width: 0; font-size: 14px; }
   .bot-says p { margin: 4px 0 0; }
   .steps { display: flex; gap: 0; padding: 0 12px; background: #fff; border-bottom: 2px solid var(--ink); font: 700 11.5px/1 var(--mono); overflow-x: auto; }
@@ -49,9 +50,9 @@
   .test .big { width: 150px; height: 150px; background: #fff; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; }
   .test .big svg { width: 120px; height: 120px; }
   .test .side { display: grid; gap: 12px; justify-items: start; min-width: 0; }
-  /* SORT-1's guess: a thought bubble in SORT-1's own colours, trailing back to its LED eye. */
+  /* SORT-1's guess: a thought bubble in SORT-1's own colours, trailing back to its face. */
   .thought { display: flex; align-items: center; gap: 5px; max-width: 100%; margin: 0; }
-  .thought .eye { margin: 0; }
+  .thought > svg { flex: none; }
   .puff { flex: none; border-radius: 50%; background: var(--panel); border: 2px solid var(--ink); }
   .puff.s { width: 8px; height: 8px; }
   .puff.m { width: 13px; height: 13px; }
@@ -72,12 +73,12 @@
   .bar.after .fill { background: #7be0c3; }
   .lesson { padding: 12px 14px; background: var(--sun); border: 2px solid var(--ink); font-weight: 600; }
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
-  .earned span { font: 800 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
+  .earned span { font: 800 12px/1 var(--mono); padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
   .choices { display: grid; gap: 8px; max-width: 520px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   /* What SORT-1 remembers: every example, framed by the child's label. */
   .mem { display: grid; gap: 6px; width: 100%; min-width: 0; text-align: left; }
-  .mem h3 { margin: 0; font: 800 12px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--soft); }
+  .mem h3 { margin: 0; font: 800 13px/1.2 var(--mono); color: var(--soft); }
   .mem-row { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; padding: 4px 4px 6px; }
   .mem-item { flex: none; display: grid; justify-items: center; padding: 2px; border: 3px solid #2f9e6e; background: var(--good); }
   .mem-item.not { border-color: #e0567a; background: var(--bad); }
@@ -92,7 +93,7 @@
 
   /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. SORT-1's name and the
      headings keep the look; its words keep its dark colours, so it still looks like a machine. */
-  [data-band="explorers"] .bot-tag { font: 13px var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .bot-tag { font: 13px var(--sans); }
   [data-band="explorers"] .bot-says p { font: 17px/1.4 var(--sans); }
   [data-band="explorers"] .steps { font: 700 14px/1 var(--sans); }
   [data-band="explorers"] h2 { font-size: 20px; }
@@ -103,10 +104,10 @@
   [data-band="explorers"] .verdict, [data-band="explorers"] .lesson { font-size: 17px; }
   [data-band="explorers"] .res { width: 80px; font: 800 13px/1.2 var(--sans); }
   [data-band="explorers"] .bar { font: 700 15px var(--sans); grid-template-columns: 8ch 1fr 5ch; }
-  [data-band="explorers"] .mem h3 { font: 800 14px/1.2 var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .mem h3 { font: 800 14px/1.2 var(--sans); }
   [data-band="explorers"] .near-cap { font: 700 12px/1.15 var(--sans); }
   [data-band="explorers"] .count { font: 800 16px/1.2 var(--sans); }
-  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); }
   @media (max-width: 520px) {
     .test { grid-template-columns: 1fr; justify-items: center; text-align: center; }
     .test .side { justify-items: center; } .test .row { justify-content: center; } .cloud { font-size: 16px; padding: 8px 14px; }
@@ -126,12 +127,12 @@
   }
   @media (pointer: coarse) { .toggle button { min-height: 42px; font-size: 13px; } .btn { min-height: 48px; } .choices .btn { padding: 13px 14px; } }
   @media (max-width: 520px), (max-height: 480px) { [data-band="explorers"] .cloud { font-size: 17px; } }
-  @media (prefers-reduced-motion: reduce) { .bot.thinking .eye { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .bot.thinking .face .led { animation: none; } }
 </style>
 </head>
 <body>
   <div class="bot" id="bot">
-    <span class="eye" aria-hidden="true"></span>
+    <span class="face" id="face" aria-hidden="true"></span>
     <div class="bot-says"><div class="bot-name">SORT-1</div><div class="bot-tag" id="tag"></div><p id="says" aria-live="polite"></p></div>
   </div>
   <nav class="steps" id="steps" aria-label="Steps"></nav>
@@ -145,6 +146,13 @@
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  /* ---------------- pixel art ---------------- */
+  // SORT-1 is a small sorting bin with one big eye and one small (rows as for kidvo.sprite in sdk.js).
+  // The lamp on its lid blinks while it thinks.
+  const SORT = ['.....RR.....', '.....KK.....', 'KKKKKKKKKKKK', 'KOOOOOOOOOOK', '.KOOOOOOOOK.', '.KOWWWOWWOK.', '.KOWKWOWKOK.', '.KOWWWOOOOK.', '.KOOOOOOOOK.', '.KOKKKKKKOK.', '.KooooooooK.', '..KKKKKKKK..'];
+  const sortFace = scale => kidvo.sprite(SORT, { colors: { O: '#ffb86b', o: '#e8963f' }, led: 'R', scale });
+  $('face').append(sortFace());
 
   /* ---------------- fruit: what SORT-1 can "see" ---------------- */
   // h = colour (hue in degrees), r = how round (0-1), s = size (0-1). That is all SORT-1 knows about a fruit.
@@ -337,7 +345,8 @@
         const big = el('div', 'big'); big.insertAdjacentHTML('beforeend', svg(f.kind));
         const side = el('div', 'side');
         const thought = el('p', 'thought');
-        thought.insertAdjacentHTML('beforeend', '<span class="eye" aria-hidden="true"></span><span class="puff s" aria-hidden="true"></span><span class="puff m" aria-hidden="true"></span>');
+        thought.append(sortFace(2));
+        thought.insertAdjacentHTML('beforeend', '<span class="puff s" aria-hidden="true"></span><span class="puff m" aria-hidden="true"></span>');
         thought.append(el('span', 'cloud', t(guess.apple ? 'guessApple' : 'guessNot')));
         side.append(el('h2', null, t('testTitle', { n: idx + 1, total: items.length })), thought, memoryStrip(guess.nearest));
         if (judged === null) {

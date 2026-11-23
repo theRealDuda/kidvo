@@ -18,19 +18,20 @@
   html, body { margin: 0; height: 100%; }
   body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); display: flex; flex-direction: column; position: relative; }
   .bot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--panel); color: var(--text); border-bottom: 2px solid var(--ink); font-family: var(--mono); }
-  .eye { width: 14px; height: 14px; flex: none; background: var(--led); box-shadow: 0 0 0 3px #4a2030, 0 0 10px var(--led); }
-  .bot.thinking .eye { animation: blink .5s steps(2) infinite; }
+  .face { width: 36px; height: 36px; flex: none; }
+  .face svg { display: block; width: 100%; height: 100%; }
+  .bot.thinking .face .led { animation: blink .5s steps(2) infinite; }
   @keyframes blink { 50% { opacity: .25; } }
   .bot-id { flex: 1; min-width: 0; }
   .bot-name { font-weight: 800; letter-spacing: .06em; }
-  .bot-tag { color: var(--dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+  .bot-tag { color: var(--dim); font-size: 11.5px; }
   .hud { text-align: right; font: 700 12px/1.4 var(--mono); font-variant-numeric: tabular-nums; }
   main { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 12px 18px; display: flex; flex-direction: column; gap: 12px; }
   .q { align-self: flex-end; max-width: 88%; background: #fff; border: 2px solid var(--ink); padding: 8px 12px; font-weight: 700; }
-  .q small { display: block; font: 700 10.5px var(--mono); color: var(--soft); text-transform: uppercase; letter-spacing: .08em; }
+  .q small { display: block; font: 700 12px var(--mono); color: var(--soft); }
   .a { align-self: flex-start; max-width: 92%; background: var(--panel-2); color: var(--text); border-left: 4px solid var(--text); padding: 9px 12px; font: 14.5px/1.5 var(--mono); }
   .lib { background: var(--paper); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 10px 12px; }
-  .lib b { display: block; font: 800 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+  .lib b { display: block; font: 800 12.5px var(--mono); margin-bottom: 2px; }
   .verdict { padding: 9px 12px; border: 2px dashed var(--ink); background: var(--good); font-weight: 600; }
   .verdict.bad { background: var(--bad); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -54,7 +55,7 @@
   .note { color: var(--soft); font-size: 13.5px; }
   .stat { display: flex; justify-content: space-between; font: 700 13px var(--mono); }
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
-  .earned span { font: 800 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
+  .earned span { font: 800 12px/1 var(--mono); padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
   .lesson { padding: 10px 12px; background: var(--sun); border: 2px solid var(--ink); font-weight: 700; }
   /* The age picker comes before anyone knows who is playing, so a 7-year-old must be able to read it too. */
   .btn.band { font-size: 16px; } .btn.band small { font-size: 14px; }
@@ -62,33 +63,33 @@
   .howto { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   .howto li { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; font: 600 17px/1.35 var(--sans); }
   .howto .pic { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--ink); }
-  .howto svg { width: 44px; height: 44px; }
+  .howto .pic > svg:not([width]) { width: 44px; height: 44px; }
 
   /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. The robot's name and
      the headings keep the look; QUIZ-O-TRON keeps its dark panel, so it still looks like a machine. */
-  [data-band="explorers"] .bot-tag { font: 13px var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .bot-tag { font: 13px var(--sans); }
   [data-band="explorers"] .hud { font-size: 14px; max-width: 50%; }
   [data-band="explorers"] .q { font-size: 18px; }
-  [data-band="explorers"] .q small { font: 700 13px var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .q small { font: 700 13px var(--sans); }
   [data-band="explorers"] .a { font: 18px/1.5 var(--sans); }
   [data-band="explorers"] .lib, [data-band="explorers"] .verdict { font-size: 17px; }
-  [data-band="explorers"] .lib b { font: 800 14px var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .lib b { font: 800 14px var(--sans); }
   [data-band="explorers"] .btn { font: 800 17px/1.2 var(--sans); }
   [data-band="explorers"] .btn small { font-size: 14px; }
   [data-band="explorers"] .card { font-size: 17px; }
   [data-band="explorers"] .card h2 { font-size: 21px; }
   [data-band="explorers"] .note { font-size: 16px; }
   [data-band="explorers"] .stat { font: 600 16px var(--sans); }
-  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); }
   @media (max-width: 420px) { .row .btn { flex: 1 1 130px; } .hud { font-size: 11px; } }
-  @media (max-height: 480px) { .bot { padding: 6px 10px; } .bot-tag { display: none; } main { padding: 8px 10px 10px; gap: 8px; } }
+  @media (max-height: 480px) { .bot { padding: 6px 10px; } .face { width: 24px; height: 24px; } .bot-tag { display: none; } main { padding: 8px 10px 10px; gap: 8px; } }
   @media (pointer: coarse) { .btn { min-height: 48px; padding: 12px 16px; } footer button { padding: 10px 0; } }
-  @media (prefers-reduced-motion: reduce) { .bot.thinking .eye { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .bot.thinking .face .led { animation: none; } }
 </style>
 </head>
 <body>
   <div class="bot" id="bot">
-    <span class="eye" aria-hidden="true"></span>
+    <span class="face" id="face" aria-hidden="true"></span>
     <span class="bot-id"><span class="bot-name">QUIZ-O-TRON</span><br><span class="bot-tag" id="tag"></span></span>
     <span class="hud"><span id="progress"></span></span>
   </div>
@@ -106,6 +107,13 @@
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  /* ---------------- pixel art ---------------- */
+  // QUIZ-O-TRON is a television with rabbit ears, a sure smile and a bow tie (rows as for kidvo.sprite in sdk.js).
+  // The tips of its ears are its lamps: they blink while it thinks.
+  const QUIZ = ['.Y........Y.', '..K......K..', '.KKKKKKKKKK.', 'KBBBBBBBBBBK', 'KBKKBBBBKKBK', 'KBKKBBBBKKBK', 'KBBBBBBBBBBK', 'KBKBBBBBBKBK', 'KBBKKKKKKBBK', 'KbbbbbbbbbbK', '.KKKKKKKKKK.', '...RRKKRR...'];
+  const quizFace = scale => kidvo.sprite(QUIZ, { colors: { B: '#9ec5ff', b: '#6f9fe8' }, led: 'Y', scale });
+  $('face').append(quizFace());
 
   // Every question has q_<id> (the question), a_<id> (QUIZ-O-TRON's answer) and f_<id> (the library fact).
   // "made" answers are made up on purpose. Each round mixes 3 true and 3 made-up answers.
@@ -264,7 +272,7 @@
   /* ---------------- how to play: Explorers see it once, before their first round ---------------- */
   // Pictures first, one short line each. Kept in this game's storage; "start over" shows it again.
   const PIC = {
-    bot: '<svg viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="32" fill="#23263a" stroke="#191833" stroke-width="3"/><rect x="10" y="14" width="7" height="7" fill="#ff6b5b"/><rect x="21" y="16" width="17" height="3" fill="#d9ffe6"/><rect x="10" y="26" width="28" height="3" fill="#d9ffe6"/><rect x="10" y="32" width="20" height="3" fill="#d9ffe6"/></svg>',
+    bot: () => quizFace(4),
     calls: '<svg viewBox="0 0 48 48"><rect x="3" y="12" width="19" height="24" fill="#c6f3e3" stroke="#191833" stroke-width="3"/><path d="M8 24l3 4 6-8" fill="none" stroke="#191833" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="26" y="12" width="19" height="24" fill="#ffd6e0" stroke="#191833" stroke-width="3"/><path d="M31 19l9 10M40 19l-9 10" stroke="#191833" stroke-width="3" stroke-linecap="round"/></svg>',
     book: '<svg viewBox="0 0 48 48"><path d="M24 12c-5-4-12-4-18-2v28c6-2 13-2 18 2c5-4 12-4 18-2V10c-6-2-13-2-18 2z" fill="#fff8dc" stroke="#191833" stroke-width="3" stroke-linejoin="round"/><path d="M24 12v28" stroke="#191833" stroke-width="3"/></svg>'
   };
@@ -279,7 +287,8 @@
       const card = el('div', 'card');
       const list = el('ol', 'howto');
       for (const [pic, key] of [['bot', 'howto1'], ['calls', 'howto2'], ['book', 'howto3']]) {
-        const p = el('span', 'pic'); p.setAttribute('aria-hidden', 'true'); p.innerHTML = PIC[pic];
+        const p = el('span', 'pic'); p.setAttribute('aria-hidden', 'true');
+        if (typeof PIC[pic] === 'string') p.innerHTML = PIC[pic]; else p.append(PIC[pic]());
         const li = el('li'); li.append(p, el('span', null, t(key))); list.append(li);
       }
       const go = el('button', 'btn go', t('howtoGo')); go.type = 'button';

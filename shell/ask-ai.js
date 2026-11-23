@@ -10,6 +10,8 @@
  *
  *   const ai = kidvoAI.create(document.getElementById('oracle'), {
  *     name: 'ORACLE-3000',
+ *     face: kidvo.sprite(['.KKKK.', 'KWRRWK', 'KWWWWK', '.KKKK.'], { led: 'R' }),  // optional: your AI's face
+ *                                      // (see kidvo.sprite in sdk.js); its "led" pixels blink while it thinks.
  *     sparks: 3,                       // question budget per round (null = unlimited)
  *     greeting: 'Hello. Ask me anything about this maze.',
  *     questions: () => [               // the questions on offer right now
@@ -42,10 +44,11 @@
          font: 13px/1.45 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
   .kai-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--kai-panel); border-bottom: 2px solid var(--kai-ink); }
   .kai-eye { width: 14px; height: 14px; flex: none; background: var(--kai-led); box-shadow: 0 0 0 3px #4a2030, 0 0 10px var(--kai-led); }
-  .kai.thinking .kai-eye { animation: kai-blink .5s steps(2) infinite; }
+  .kai-face { width: 36px; height: 36px; flex: none; }
+  .kai.thinking .kai-eye, .kai.thinking .kai-face .led { animation: kai-blink .5s steps(2) infinite; }
   @keyframes kai-blink { 50% { opacity: .25; } }
   .kai-name { font-weight: 800; letter-spacing: .06em; }
-  .kai-tag { color: var(--kai-dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+  .kai-tag { color: var(--kai-dim); font-size: 11.5px; }
   .kai-sparks { margin-left: auto; display: flex; gap: 3px; align-items: center; }
   .kai-spark { width: 12px; height: 16px; background: var(--kai-spark);
                clip-path: polygon(55% 0, 0 58%, 45% 58%, 30% 100%, 100% 38%, 55% 38%); }
@@ -62,7 +65,7 @@
   .kai-verdict.caught { color: var(--kai-ok); }
   .kai-verdict.fine { color: var(--kai-spark); }
   .kai-ask { padding: 10px 12px 12px; border-top: 2px solid var(--kai-ink); background: var(--kai-panel); }
-  .kai-label { color: var(--kai-dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .kai-label { color: var(--kai-dim); font-size: 11.5px; margin-bottom: 6px; }
   .kai-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .kai-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; cursor: pointer;
               background: var(--kai-chip); color: var(--kai-ink); border: 2px solid var(--kai-ink); box-shadow: 2px 2px 0 #000;
@@ -82,15 +85,15 @@
   /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. The AI's name stays a machine's. */
   [data-band="explorers"] .kai { font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
   [data-band="explorers"] .kai-name { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 15px; }
-  [data-band="explorers"] .kai-tag, [data-band="explorers"] .kai-label { font-size: 13px; letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .kai-tag, [data-band="explorers"] .kai-label { font-size: 13px; }
   [data-band="explorers"] .kai-q, [data-band="explorers"] .kai-a p { font-size: 17px; }
   [data-band="explorers"] .kai-chip { font-size: 16px; padding: 9px 12px; }
   [data-band="explorers"] .kai-chip .kai-need { font-size: 13px; }
   [data-band="explorers"] .kai-chip .kai-cost .kai-spark { width: 10px; height: 14px; }
   [data-band="explorers"] .kai-flag { font-size: 14px; }
   [data-band="explorers"] .kai-verdict { font-size: 15px; }
-  @media (max-height: 480px) { .kai-head { padding: 6px 10px; } .kai-tag { display: none; } .kai-ask { padding: 6px 10px 8px; } .kai-label { display: none; } }
-  @media (prefers-reduced-motion: reduce) { .kai.thinking .kai-eye { animation: none; } }
+  @media (max-height: 480px) { .kai-head { padding: 6px 10px; } .kai-face { width: 24px; height: 24px; } .kai-tag { display: none; } .kai-ask { padding: 6px 10px 8px; } .kai-label { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .kai.thinking .kai-eye, .kai.thinking .kai-face .led { animation: none; } }
   `;
 
   const DEFAULT_TEXT = {
@@ -119,7 +122,9 @@
     root.classList.add('kai');
     root.replaceChildren();
     const head = el('div', 'kai-head');
-    const eye = el('span', 'kai-eye');
+    // The AI's face, when the game drew one; a plain LED eye when it did not.
+    const eye = o.face instanceof Element ? o.face : el('span', 'kai-eye');
+    if (eye === o.face) eye.classList.add('kai-face');
     eye.setAttribute('aria-hidden', 'true');
     const title = el('div');
     const tagEl = el('div', 'kai-tag', tx.tag);

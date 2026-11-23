@@ -30,6 +30,9 @@
     other: t('ai_other'), sparksLeft: v => t('ai_sparksLeft', v), costs: v => t('ai_costs', v), notEnough: t('ai_notEnough')
   });
   const ai = kidvoAI.create(document.getElementById('ai'), {
+    // Your AI's face. Draw your own: one letter per pixel, "." for empty (kidvo.sprite in shell/sdk.js).
+    // The pixels of the "led" letter blink while it thinks.
+    face: kidvo.sprite(['.KKKKKK.', 'KWWWWWWK', 'KWKWWKWK', 'KWWWWWWK', 'KWRRRRWK', '.KKKKKK.'], { led: 'R' }),
     sparks: 2,
     text: aiText(),
     questions: () => [{

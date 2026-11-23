@@ -62,7 +62,7 @@ Three files hold almost everything:
 - `lang/en.js` holds every text the child sees. Read them with `kidvo.t('key')`, never as strings in the code, so other languages can follow.
 - `icon.svg` is your icon. Shapes only: no scripts, links or embedded images.
 
-**The practice AI.** Games never call a real AI. Use the shared panel from `shell/ask-ai.js`, as the template does: `kidvoAI.create(element, { sparks, text, questions, onFlag })`. Your game writes every answer, including the wrong ones. Three rules make a kidvo game:
+**The practice AI.** Games never call a real AI. Use the shared panel from `shell/ask-ai.js`, as the template does: `kidvoAI.create(element, { face, sparks, text, questions, onFlag })`. Your game writes every answer, including the wrong ones, and draws its AI a face of its own with `kidvo.sprite` (rows of letters, one per pixel). Three rules make a kidvo game:
 
 1. **The child thinks first.** Asking the AI is optional and has a visible cost (sparks, in the template).
 2. **Wrong answers are wrong on purpose** and catchable: easy to spot for Explorers, believable for Investigators.

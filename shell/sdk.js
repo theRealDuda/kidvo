@@ -18,6 +18,10 @@
  *   kidvo.onBand(fn)           fn(band) now and whenever it changes (a child may change it in another game)
  *   kidvo.setBand(band)        the child chose in your game: the desktop remembers it and every game hears it.
  *                              Your page's <html> carries data-band="explorers" or "investigators" for your CSS.
+ *   kidvo.sprite(rows, opts)   pixel art without image files. rows are strings, one letter per pixel, "." for empty:
+ *                              K ink, W white, R coral, Y yellow, and your own in opts.colors ({ G: '#7be0c3' }).
+ *                              Returns an inline <svg>; opts.scale: 3 makes every pixel 3px (without it your CSS
+ *                              sets the size). Pixels of the letter opts.led get class="led" for your CSS to blink.
  *   kidvo.store.get/set/remove small per-app storage kept in the visitor's browser
  *   kidvo.setHotspot(rect)     overlays only: one clickable spot {x, y, w, h} (max 140x140); clicks arrive as "shell:poke"
  *                              ({ x, y, long }: long is true for a long press, a right-click or the context-menu key)
@@ -79,6 +83,39 @@
     for (const fn of bandFns) { try { fn(band); } catch (err) { console.error('[kidvo]', err); } }
   }
   setBand(new URLSearchParams(location.search).get('band'));
+
+  /* ---------- pixel art ---------- */
+  // The same row strings as Vo's sprites (apps/pet/sprites.js), drawn as one <path> per colour.
+  const PIXELS = { K: '#191833', W: '#ffffff', R: '#ff6b5b', Y: '#ffd23f' };
+  function sprite(rows, opts = {}) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const colors = Object.assign({}, PIXELS, opts.colors);
+    const paths = {};
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const c = row[x];
+        if (!colors[c]) continue;
+        let w = 1;
+        while (row[x + w] === c) w++;
+        paths[c] = (paths[c] || '') + `M${x} ${y}h${w}v1h-${w}z`;
+        x += w - 1;
+      }
+    });
+    const cols = Math.max(0, ...rows.map(r => r.length));
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${cols} ${rows.length}`);
+    svg.setAttribute('shape-rendering', 'crispEdges');
+    svg.setAttribute('aria-hidden', 'true');
+    if (opts.scale > 0) { svg.setAttribute('width', cols * opts.scale); svg.setAttribute('height', rows.length * opts.scale); }
+    for (const c of Object.keys(paths)) {
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('fill', colors[c]);
+      p.setAttribute('d', paths[c]);
+      if (c === opts.led) p.setAttribute('class', 'led');
+      svg.append(p);
+    }
+    return svg;
+  }
 
   const post = msg => { if (!standalone) window.parent.postMessage(Object.assign({ kidvo: 1 }, msg), '*'); };
   const matches = (p, t) => p === '*' || p === t || (p.endsWith(':*') && t.startsWith(p.slice(0, -1)));
@@ -148,6 +185,7 @@
       return standalone ? Promise.resolve(true) : call('setBand', b).catch(() => false);
     },
     t,
+    sprite,
     store: standalone
       ? {
           get: async k => (k in mem ? mem[k] : null),

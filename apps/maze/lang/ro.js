@@ -5,7 +5,7 @@ kidvoStrings('ro', {
   stepsCount_one: '{n} pas',
   stepsCount_few: '{n} pași',
   stepsCount_other: '{n} de pași',
-  canvas: 'Labirint. Folosește săgețile sau tastele W A S D ca să duci pătratul roșu la steaua galbenă.',
+  canvas: 'Labirint. Folosește săgețile sau tastele W A S D ca să duci robotul la steaua galbenă.',
   padLabel: 'Butoane de direcție',
   up: 'Sus', down: 'Jos', left: 'Stânga', right: 'Dreapta',
   totals: 'puterea minții {brain} · detectiv {detective} · cel mai scurt {shortest} · cel mai bun nivel {best}',

@@ -4,7 +4,7 @@ kidvoStrings('hu', {
   goal: 'érd el a csillagot a lehető legkevesebb lépésből',
   stepsCount_one: '{n} lépés',
   stepsCount_other: '{n} lépés',
-  canvas: 'Labirintus. A nyílbillentyűkkel vagy a W A S D gombokkal vezesd a piros négyzetet a sárga csillaghoz.',
+  canvas: 'Labirintus. A nyílbillentyűkkel vagy a W A S D gombokkal vezesd a robotot a sárga csillaghoz.',
   padLabel: 'Irányítógombok',
   up: 'Fel', down: 'Le', left: 'Balra', right: 'Jobbra',
   totals: 'agyerő {brain} · detektív {detective} · legrövidebb {shortest} · legjobb szint {best}',

@@ -56,7 +56,7 @@
   .band small { font: 600 14px var(--sans); }
   .stat { display: flex; justify-content: space-between; font: 700 13px var(--mono); font-variant-numeric: tabular-nums; }
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
-  .earned span { font: 800 11px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 5px 7px; border: 2px solid var(--ink); background: var(--trail); }
+  .earned span { font: 800 12px/1 var(--mono); padding: 5px 7px; border: 2px solid var(--ink); background: var(--trail); }
   .note { font-size: 13px; color: var(--soft); }
   .feedback { font-weight: 700; }
 
@@ -72,7 +72,7 @@
   [data-band="explorers"] .note { font-size: 16px; }
   [data-band="explorers"] .stat { font: 600 16px var(--sans); }
   [data-band="explorers"] .btn { font: 800 16px/1.2 var(--sans); }
-  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); }
   [data-band="explorers"] .ask-toggle { font: 800 16px var(--sans); }
   /* The running totals are for older players; Explorers see their badges on each level's card. */
   [data-band="explorers"] #totals { display: none; }
@@ -81,7 +81,9 @@
   .howto { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   .howto li { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; font: 600 17px/1.35 var(--sans); }
   .howto .pic { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--ink); }
-  .howto svg { width: 44px; height: 44px; }
+  .howto .pic > svg { width: 44px; height: 44px; }
+  .howto .scene { position: relative; width: 48px; height: 48px; }
+  .howto .scene svg { position: absolute; }
 
   /* Phones (portrait): the maze gets the whole screen; ORACLE slides up as a drawer. */
   @media (max-width: 620px) {
@@ -347,6 +349,18 @@
   const cv = $('c');
   const ctx = cv.getContext('2d');
 
+  /* ---------------- pixel art ---------------- */
+  // Row strings as for kidvo.sprite (sdk.js): one letter per pixel. K ink, W white, R coral, Y yellow, and this game's own.
+  const PIXELS = { K: '#191833', W: '#ffffff', R: '#ff6b5b', Y: '#ffd23f', r: '#d94a3d', L: '#a9b2f5', l: '#7f8ae0', P: '#ff9a3c' };
+  // The robot. Rows 4 and 5 are its visor: the eyes look the way it last moved (robotRows).
+  const ROBOT = ['....Y....', '....K....', '.KKKKKKK.', 'KRRRRRRRK', 'KRWWWWWRK', 'KRWKWKWRK', 'KRRRRRRRK', 'KrrrrrrrK', '.KKKKKKK.', '.KK...KK.'];
+  const STAR = ['.....K.....', '....KYK....', '....KYK....', 'KKKKYYYKKKK', 'KYYYYYYYYYK', '.KYYYYYYYK.', '..KYYYYYK..', '..KYYYYYK..', '.KYYYKYYYK.', '.KYYK.KYYK.', '.KKK...KKK.'];
+  const DOTS = ['P..P..P', '.......', '.......', 'P......', '.......', '.......', 'P......'];
+  const SPARK = ['...KKKK', '..KYYYK', '.KYYYK.', 'KYYYKKK', 'KKKYYYK', '..KYYK.', '.KYYK..', 'KYYK...', 'KKK....'];
+  // ORACLE-3000 is a crystal ball with one eye. The eye is its LED: it blinks while ORACLE thinks.
+  const ORACLE = ['...KKKKKK...', '..KLLLLLLK..', '.KLLWLLLLLK.', '.KLLKKKKLLK.', 'KLLKWWWWKLLK', 'KLLKWRRWKLLK', 'KLLKWRRWKLLK', 'KLLKWWWWKLLK', '.KllKKKKllK.', '..KllllllK..', '..KKKKKKKK..', '.KYYYYYYYYK.'];
+  const pixels = (rows, scale) => kidvo.sprite(rows, { colors: PIXELS, led: rows === ORACLE ? 'R' : null, scale });
+
   let band = null, B = null;
   let level = 1, me, from = null, steps = 0, par, sparks = SPARKS, trail, shownPath = null, aiSolved = false, done = false;
   // bests: best level per band (at most LEVELS). best is kept for progress saved before bands had their own.
@@ -402,19 +416,10 @@
       ctx.fillStyle = '#ff9a3c';
       for (const p of shownPath) ctx.fillRect(o + p.x * cell + cell * .38, o + p.y * cell + cell * .38, cell * .24, cell * .24);
     }
-    const gx = o + (N - 1) * cell, gy = o;
-    ctx.fillStyle = '#ffd23f';
-    ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const r = (i % 2 ? .2 : .42) * cell, a = -Math.PI / 2 + i * Math.PI / 5;
-      ctx.lineTo(gx + cell / 2 + r * Math.cos(a), gy + cell / 2 + r * Math.sin(a));
-    }
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#191833'; ctx.lineWidth = Math.max(1, cell / 22); ctx.stroke();
-    ctx.fillStyle = '#ff6b5b';
-    ctx.fillRect(o + me.x * cell + cell * .22, o + me.y * cell + cell * .22, cell * .56, cell * .56);
-    ctx.fillStyle = '#191833';
     const w = Math.max(2, Math.round(cell / 7));
+    paint(STAR, o + (N - 1) * cell, o, cell, w);
+    paint(robotRows(), o + me.x * cell, o + me.y * cell, cell, w);
+    ctx.fillStyle = '#191833';
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
       const v = cells[y * N + x], px = o + x * cell, py = o + y * cell;
       if (!(v & 1)) ctx.fillRect(px - w / 2, py - w / 2, cell + w, w);
@@ -422,6 +427,32 @@
       if (y === N - 1 && !(v & 4)) ctx.fillRect(px - w / 2, py + cell - w / 2, cell + w, w);
       if (x === N - 1 && !(v & 2)) ctx.fillRect(px + cell - w / 2, py - w / 2, w, cell + w);
     }
+  }
+
+  // A sprite in the middle of a maze cell, inside its walls. Each sprite pixel is a whole number of canvas pixels
+  // where there is room for that, so the pixels stay even and sharp.
+  function paint(rows, x, y, cell, wall) {
+    const room = cell - wall - 2;
+    let s = room / Math.max(rows.length, rows[0].length);
+    if (s >= 2) s = Math.floor(s);
+    const ox = x + (cell - rows[0].length * s) / 2, oy = y + (cell - rows.length * s) / 2;
+    rows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        if (!PIXELS[row[i]]) continue;
+        const x0 = Math.round(ox + i * s), y0 = Math.round(oy + j * s);
+        ctx.fillStyle = PIXELS[row[i]];
+        ctx.fillRect(x0, y0, Math.round(ox + (i + 1) * s) - x0, Math.round(oy + (j + 1) * s) - y0);
+      }
+    });
+  }
+
+  // The robot looks the way it last moved (straight ahead before its first step).
+  function robotRows() {
+    const dx = from ? me.x - from.x : 0, up = !!from && me.y < from.y;
+    const rows = ROBOT.slice();
+    rows[up ? 4 : 5] = dx > 0 ? 'KRWWKWKRK' : dx < 0 ? 'KRKWKWWRK' : 'KRWKWKWRK';
+    rows[up ? 5 : 4] = 'KRWWWWWRK';
+    return rows;
   }
 
   function move(d) {
@@ -481,7 +512,7 @@
     tag: t('ai_tag'), ask: t('ai_ask'), notRight: t('ai_notRight'), caught: t('ai_caught'), fine: t('ai_fine'),
     other: t('ai_other'), sparksLeft: v => t('ai_sparksLeft', v), costs: v => t('ai_costs', v), notEnough: t('ai_notEnough')
   });
-  const oracle = kidvoAI.create($('oracle'), { name: 'ORACLE-3000', sparks: SPARKS, questions, text: aiText(), onAnswer: () => renderToggle() });
+  const oracle = kidvoAI.create($('oracle'), { name: 'ORACLE-3000', face: pixels(ORACLE), sparks: SPARKS, questions, text: aiText(), onAnswer: () => renderToggle() });
 
   // Phones: ORACLE lives in a drawer that the child opens and closes.
   function renderToggle() {
@@ -668,16 +699,23 @@
   /* ---------------- how to play: Explorers see it once, before their first maze ---------------- */
   // Pictures first, one short line each. Kept in this game's storage; "start over" shows it again.
   const PIC = {
-    star: '<svg viewBox="0 0 48 48"><rect x="4" y="31" width="13" height="13" fill="#ff6b5b"/><path d="M10.5 28V13h17" fill="none" stroke="#ff9a3c" stroke-width="3" stroke-dasharray="3 4"/><path d="M38 4l2.6 5.6 6 .6-4.5 4 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.5-4 6-.6z" fill="#ffd23f" stroke="#191833" stroke-width="2" stroke-linejoin="round"/></svg>',
-    oracle: '<svg viewBox="0 0 48 48"><rect x="3" y="10" width="26" height="26" fill="#23263a" stroke="#191833" stroke-width="3"/><rect x="11" y="18" width="10" height="10" fill="#ff6b5b"/><path d="M40 6l-9 20h7l-3 16 10-22h-7z" fill="#ffd23f" stroke="#191833" stroke-width="2" stroke-linejoin="round"/></svg>',
+    star: () => scene([pixels(ROBOT, 2), 1, 28], [pixels(DOTS, 2), 9, 10], [pixels(STAR, 2), 26, 0]),
+    oracle: () => scene([pixels(ORACLE, 3), 0, 12], [pixels(SPARK, 2), 34, 0]),
     catch: '<svg viewBox="0 0 48 48"><rect x="3" y="8" width="34" height="18" fill="#2e3250" stroke="#191833" stroke-width="3"/><rect x="9" y="15" width="20" height="4" fill="#d9ffe6"/><circle cx="34" cy="34" r="11" fill="#ff8fab" stroke="#191833" stroke-width="3"/><path d="M29 29l10 10M39 29l-10 10" stroke="#191833" stroke-width="3" stroke-linecap="round"/></svg>'
+  };
+  // A 48x48 picture made of sprites: [sprite, left, top].
+  const scene = (...parts) => {
+    const d = el('span', null, 'scene');
+    for (const [art, x, y] of parts) { art.style.left = x + 'px'; art.style.top = y + 'px'; d.append(art); }
+    return d;
   };
   let howtoSeen = false;
   function howtoView() {
     const card = el('div', null, 'card');
     const list = el('ol', null, 'howto');
     for (const [pic, text] of [['star', t('howto1')], ['oracle', t('howto2')], ['catch', t('howto3', { button: t('ai_notRight') })]]) {
-      const p = el('span', null, 'pic'); p.setAttribute('aria-hidden', 'true'); p.innerHTML = PIC[pic];
+      const p = el('span', null, 'pic'); p.setAttribute('aria-hidden', 'true');
+      if (typeof PIC[pic] === 'string') p.innerHTML = PIC[pic]; else p.append(PIC[pic]());
       const li = el('li'); li.append(p, el('span', text)); list.append(li);
     }
     const go = el('button', t('howtoGo'), 'btn');

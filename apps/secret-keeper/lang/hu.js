@@ -1,5 +1,5 @@
 kidvoStrings('hu', {
-  label: 'gyakorló AI · bármit választasz, nem kerül ki a rendszerből',
+  label: 'Gyakorló AI · bármit választasz, nem kerül ki a rendszerből',
   label_explorers: 'Gyakorló AI · csak játék',
   progress: '{n}. kérdés / {total}',
   shieldsAria: '{n} pajzs maradt',
