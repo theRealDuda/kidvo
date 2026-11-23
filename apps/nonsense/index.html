@@ -57,6 +57,8 @@
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
   .earned span { font: 800 12px/1 var(--mono); padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
   .lesson { padding: 10px 12px; background: var(--sun); border: 2px solid var(--ink); font-weight: 700; }
+  .ask { font-weight: 700; }
+  .choices { display: grid; gap: 8px; }
   /* The age picker comes before anyone knows who is playing, so a 7-year-old must be able to read it too. */
   .btn.band { font-size: 16px; } .btn.band small { font-size: 14px; }
   /* How to play (Explorers, once): a picture and one short line per rule. */
@@ -249,17 +251,22 @@
       // How many checks landed on a made-up answer is a statistic for older players.
       if (checked && band !== 'explorers') card.append(el('p', 'note', t('checksLanded', { n: checkedMade, total: checked })));
       if (earned.length) { const e = el('div', 'earned'); for (const b of earned) e.append(el('span', null, t(b))); card.append(e); }
-      card.append(el('p', null, t('reflect')));
+      // Explorers look back at what they saw. Investigators carry it over to a case of their own:
+      // trust it because it sounded sure, check it, or never use AI again (only checking keeps the help).
+      const apply = band === 'investigators';
+      card.append(el('p', apply ? 'ask' : null, t(apply ? 'applyQ' : 'reflect')));
       if (answered === null) {
-        const row = el('div', 'row');
-        for (const [label, val] of [[t('yesSometimes'), true], [t('noNever'), false]]) {
+        const row = el('div', apply ? 'choices' : 'row');
+        const options = apply ? ['applyA', 'applyB', 'applyC'].map(k => [t(k), k]) : [[t('yesSometimes'), true], [t('noNever'), false]];
+        for (const [label, val] of options) {
           const b = el('button', 'btn', label); b.type = 'button';
           b.addEventListener('click', () => { answered = val; showOverlay(view); });
           row.append(b);
         }
         card.append(row);
       } else {
-        card.append(el('p', null, tv(answered ? 'fbSometimes' : 'fbNever')), el('p', 'lesson', tv('lesson')));
+        card.append(apply ? el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered)) : el('p', null, tv(answered ? 'fbSometimes' : 'fbNever')),
+          el('p', 'lesson', tv('lesson')));
         const again = el('button', 'btn go', t('again')); again.type = 'button';
         again.addEventListener('click', start);
         card.append(again);

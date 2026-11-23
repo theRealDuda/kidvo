@@ -16,7 +16,25 @@
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html, body { margin: 0; height: 100%; }
-  body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); display: flex; flex-direction: column; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); display: flex; flex-direction: column; position: relative; }
+  footer { display: flex; justify-content: flex-end; padding: 6px 12px; background: #fff; border-top: 2px solid var(--ink); }
+  footer button { font: 700 11px var(--mono); background: none; border: 0; color: var(--soft); text-decoration: underline; cursor: pointer; padding: 0; }
+  footer button:focus-visible { outline: 3px solid var(--led); outline-offset: 2px; }
+  /* Who is playing: the same card as the other games, readable before anyone knows the child's age. */
+  .card-wrap { position: absolute; inset: 0; display: flex; background: rgba(255, 246, 234, .92); padding: 14px; z-index: 5; overflow-y: auto; }
+  .card { margin: auto; width: min(100%, 380px); background: #fff; border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 16px; display: grid; gap: 10px; }
+  .card:focus { outline: none; }
+  .card p { margin: 0; }
+  .card .btn { align-self: stretch; }
+  .btn.band { font-size: 16px; } .btn.band small { display: block; font: 600 14px var(--sans); }
+  .note { margin: 0; color: var(--soft); font-size: 13.5px; }
+  /* Explorers answer "why" with pictures; Investigators answer a real case. */
+  .choices .btn.pic-btn { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+  .choices .btn .pic { display: block; width: 44px; height: 44px; }
+  .choices .btn .pic svg { width: 44px; height: 44px; display: block; }
+  .choices .btn .pic svg[width] { width: 36px; height: 36px; margin: 4px; }
+  .choices .btn[aria-pressed="true"] { background: var(--ink); color: var(--sun); }
+  .think-q { margin: 0; font-weight: 700; }
   .bot { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--panel); color: var(--text); border-bottom: 2px solid var(--ink); font-family: var(--mono); }
   .face { width: 36px; height: 36px; flex: none; }
   .face svg { display: block; width: 100%; height: 100%; }
@@ -125,7 +143,7 @@
     .test .big { width: 110px; height: 110px; } .test .big svg { width: 90px; height: 90px; }
     .test .side { gap: 8px; } .cloud { font-size: 16px; padding: 6px 14px; }
   }
-  @media (pointer: coarse) { .toggle button { min-height: 42px; font-size: 13px; } .btn { min-height: 48px; } .choices .btn { padding: 13px 14px; } }
+  @media (pointer: coarse) { .toggle button { min-height: 42px; font-size: 13px; } .btn { min-height: 48px; } .choices .btn { padding: 13px 14px; } footer button { padding: 10px 0; } }
   @media (max-width: 520px), (max-height: 480px) { [data-band="explorers"] .cloud { font-size: 17px; } }
   @media (prefers-reduced-motion: reduce) { .bot.thinking .face .led { animation: none; } }
 </style>
@@ -137,10 +155,19 @@
   </div>
   <nav class="steps" id="steps" aria-label="Steps"></nav>
   <main id="stage"></main>
+  <footer><span class="links"><button type="button" id="change-band" hidden></button></span></footer>
+  <div class="card-wrap" id="overlay" hidden></div>
 
 <script>
 (() => {
-  const t = (k, v) => kidvo.t(k, v);
+  // Who is playing. Every text first looks for a version for this band (key_explorers), then the shared one,
+  // so Explorers get shorter lines and "very sure" instead of a percentage without the flow knowing.
+  const BANDS = { explorers: '7–9', investigators: '10–13' };
+  let band = null;
+  const t = (k, v) => {
+    if (band) { const own = k + '_' + band, s = kidvo.t(own, v); if (s !== own) return s; }
+    return kidvo.t(k, v);
+  };
   const $ = id => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
@@ -151,7 +178,13 @@
   // SORT-1 is a small sorting bin with one big eye and one small (rows as for kidvo.sprite in sdk.js).
   // The lamp on its lid blinks while it thinks.
   const SORT = ['.....RR.....', '.....KK.....', 'KKKKKKKKKKKK', 'KOOOOOOOOOOK', '.KOOOOOOOOK.', '.KOWWWOWWOK.', '.KOWKWOWKOK.', '.KOWWWOOOOK.', '.KOOOOOOOOK.', '.KOKKKKKKOK.', '.KooooooooK.', '..KKKKKKKK..'];
-  const sortFace = scale => kidvo.sprite(SORT, { colors: { O: '#ffb86b', o: '#e8963f' }, led: 'R', scale });
+  const SORT_COLORS = { O: '#ffb86b', o: '#e8963f' };
+  // The same face with a crack down the middle, for the answer "SORT-1 is broken".
+  const SORT_CRACKED = SORT.map((row, y) => {
+    const x = { 3: 7, 4: 6, 5: 6, 6: 6, 7: 7, 8: 6 }[y];
+    return x == null ? row : row.slice(0, x) + 'K' + row.slice(x + 1);
+  });
+  const sortFace = scale => kidvo.sprite(SORT, { colors: SORT_COLORS, led: 'R', scale });
   $('face').append(sortFace());
 
   /* ---------------- fruit: what SORT-1 can "see" ---------------- */
@@ -232,6 +265,9 @@
   /* ---------------- game flow ---------------- */
   const STEPS = ['step_teach', 'step_test', 'step_fix', 'step_retest'];
   const STEPS3 = ['step_teach', 'step_test'];
+  // Investigators: picking the examples themselves is the last step of the game, not an extra round.
+  const STEPS_INV = [...STEPS, 'step_pick'];
+  const inv = () => band === 'investigators';
   let phase = 0, stepKeys = STEPS, view = null, scores = { test1: 0, test2: 0, judged: 0, judgedTotal: 0, why: null, mislabelled: 0 };
 
   function steps() {
@@ -304,14 +340,14 @@
   }
 
   function intro() {
-    phase = 0; stepKeys = STEPS; memory = []; scores = { test1: 0, test2: 0, judged: 0, judgedTotal: 0, why: null, mislabelled: 0 };
+    phase = 0; stepKeys = inv() ? STEPS_INV : STEPS; memory = []; scores = { test1: 0, test2: 0, judged: 0, judgedTotal: 0, why: null, mislabelled: 0 };
     say('hello');
     show(() => [el('h2', null, t('introTitle')), el('p', 'hint', t('introHint')), button('start', 'btn', () => teach(TEACH1, 1))]);
   }
 
   // round 1 and 2 are the two lessons; round 3 teaches the child's own pick from the basket.
   function teach(kinds, round) {
-    phase = round === 2 ? 2 : 0;
+    phase = round === 3 && inv() ? 4 : round === 2 ? 2 : 0;
     const items = round === 3 ? kinds : shuffle(kinds.map((k, n) => ({ ...make(k, n), label: null })));
     say(round === 2 ? 'teachSay2' : 'teachSay1');
     show(() => {
@@ -331,7 +367,7 @@
   }
 
   function test(kinds, round) {
-    phase = round === 2 ? 3 : 1;
+    phase = round === 3 && inv() ? 4 : round === 2 ? 3 : 1;
     const items = kinds.map((k, n) => make(k, n + 3));
     const results = [];
     let idx = 0;
@@ -380,6 +416,13 @@
     one();
   }
 
+  // Pictures for the Explorers' "why" answers: SORT-1 cracked, a red apple, a wrong label.
+  function whyPic(k) {
+    if (k === 'whyB') return svg('redapple');
+    if (k === 'whyA') return kidvo.sprite(SORT_CRACKED, { colors: SORT_COLORS, scale: 3 });
+    return '<svg viewBox="0 0 48 48"><path d="M5 14h27l11 10-11 10H5z" fill="#c6f3e3" stroke="#191833" stroke-width="3" stroke-linejoin="round"/><path d="M12 18l11 12M23 18l-11 12" stroke="#e0567a" stroke-width="3.5" stroke-linecap="round"/></svg>';
+  }
+
   function resultStrip(results) {
     const strip = el('div', 'results');
     for (const r of results) {
@@ -416,10 +459,12 @@
         const out = [el('h2', null, t('results', { n: right, total: results.length })), resultStrip(results), memoryStrip()];
         out.push(el('h2', null, t('whyQ')));
         const box = el('div', 'choices');
-        for (const k of ['whyA', 'whyB', 'whyC', 'whyD']) {
+        // Explorers get three short answers with a picture each; the one about green apples is left out.
+        for (const k of inv() ? ['whyA', 'whyB', 'whyC', 'whyD'] : ['whyA', 'whyB', 'whyD']) {
           // The Bias spotter badge means the child found the red-apple bias, so only the usual story counts.
-          const b = button(k, 'btn alt', () => { picked = k; if (!bad && scores.why === null) scores.why = k; repaint(); });
+          const b = button(k, 'btn alt' + (inv() ? '' : ' pic-btn'), () => { picked = k; if (!bad && scores.why === null) scores.why = k; repaint(); });
           b.setAttribute('aria-pressed', picked === k ? 'true' : 'false');
+          if (!inv()) { const p = el('span', 'pic'); p.setAttribute('aria-hidden', 'true'); const art = whyPic(k); if (typeof art === 'string') p.innerHTML = art; else p.append(art); b.prepend(p); }
           box.append(b);
         }
         out.push(box);
@@ -463,7 +508,8 @@
     worse:  { title: 'finalTitleWorse',  lesson: 'lessonWorse',  say: 'sayWorse' }
   };
   function finish(results) {
-    phase = 4;
+    // Investigators still have their pick to go, so "Test again" stays the step they are on.
+    phase = inv() ? 3 : 4;
     const total = TEST1.length;
     const trend = scores.test2 > scores.test1 ? 'better' : scores.test2 === scores.test1 ? 'same' : 'worse';
     const earned = [];
@@ -472,11 +518,27 @@
     if (scores.judged === scores.judgedTotal) earned.push('badgeEye');
     kidvo.emit('done', { before: scores.test1, after: scores.test2 });
     say(FINAL[trend].say);
+    let thought = null; // Investigators' answer to the real case
     show(() => {
       const out = [el('h2', null, t(FINAL[trend].title)), resultStrip(results), memoryStrip(), bars([['before', scores.test1, ''], ['after', scores.test2, ' after']], total),
-        el('p', null, t('judgedLine', { n: scores.judged, total: scores.judgedTotal })), el('p', 'lesson', t(FINAL[trend].lesson)), el('p', 'hint', t('think'))];
+        el('p', null, t('judgedLine', { n: scores.judged, total: scores.judgedTotal })), el('p', 'lesson', t(FINAL[trend].lesson))];
       if (earned.length) { const e = el('div', 'earned'); for (const b of earned) e.append(el('span', null, t(b))); out.splice(1, 0, e); }
-      const end = el('div', 'row'); end.append(button('again', 'btn', intro), button('extraBtn', 'btn alt', pickBasket));
+      // Investigators carry the lesson over to a real case (an AI that learns faces from one-sided photos),
+      // then pick the examples themselves as the last step. For Explorers that round stays an extra.
+      if (inv()) {
+        out.push(el('p', 'think-q', t('thinkQ')));
+        const box = el('div', 'choices');
+        for (const k of ['thinkB', 'thinkA', 'thinkC']) {
+          const b = button(k, 'btn alt', () => { thought = k; repaint(); });
+          b.setAttribute('aria-pressed', thought === k ? 'true' : 'false');
+          box.append(b);
+        }
+        out.push(box);
+        if (thought) out.push(el('p', 'verdict' + (thought === 'thinkA' ? '' : ' bad'), t('fb_' + thought)));
+      }
+      const end = el('div', 'row');
+      if (inv()) end.append(button('pickBtn', 'btn', pickBasket), button('again', 'btn alt', intro));
+      else end.append(button('again', 'btn', intro), button('extraBtn', 'btn alt', pickBasket));
       out.push(end);
       return out;
     });
@@ -485,7 +547,8 @@
   /* ---------------- round 3: the child picks the examples ---------------- */
   // SORT-1 forgets everything. The child picks 8 of 16 fruit, labels them, and a fixed test of 6 scores the pick.
   function pickBasket() {
-    phase = 0; stepKeys = STEPS3; memory = [];
+    if (inv()) { phase = 4; stepKeys = STEPS_INV; } else { phase = 0; stepKeys = STEPS3; }
+    memory = [];
     const basket = shuffle(BASKET.map((k, n) => ({ ...make(k, n), label: null, picked: false })));
     say('r3Say');
     show(() => {
@@ -506,7 +569,7 @@
   }
 
   function curated(results) {
-    phase = 2;
+    phase = inv() ? STEPS_INV.length : STEPS3.length; // every step done
     const total = TEST3.length;
     const right = results.filter(r => r.sortRight).length;
     const perfect = right === total;
@@ -522,17 +585,61 @@
     });
   }
 
-  kidvo.onLang(() => { if (view) repaint(); if (lastSay) $('says').textContent = t(...lastSay); });
+  /* ---------------- who is playing ---------------- */
+  // As in the other games: the desktop remembers the band, and this card asks only while nobody has chosen.
+  let overlayView = null;
+  function showOverlay(render) {
+    overlayView = render;
+    $('overlay').replaceChildren(render());
+    $('overlay').hidden = false;
+    const card = $('overlay').querySelector('.card');
+    if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); }
+  }
+  function closeOverlay() { overlayView = null; $('overlay').hidden = true; $('overlay').replaceChildren(); }
+  function renderFooter() {
+    const b = $('change-band');
+    b.hidden = !band;
+    b.textContent = band ? t('playingAs', { band: t('band_' + band), ages: BANDS[band] }) : '';
+  }
+  function pickBand() {
+    showOverlay(() => {
+      const card = el('div', 'card');
+      card.append(el('h2', null, t('who')), el('p', 'note', t('whoNote')));
+      for (const key of Object.keys(BANDS)) {
+        const b = el('button', 'btn alt band'); b.type = 'button';
+        b.append(el('span', null, t('band_' + key)), el('small', null, t('ages', { ages: BANDS[key] })));
+        // Every game hears the choice and the desktop remembers it, so the next game does not ask again.
+        b.addEventListener('click', () => { useBand(key); kidvo.setBand(key); });
+        card.append(b);
+      }
+      return card;
+    });
+  }
+  // A band starts the game from the beginning: nothing in a half-played round carries over.
+  function useBand(key) { band = key; closeOverlay(); renderFooter(); intro(); }
+  $('change-band').addEventListener('click', pickBand);
+
+  kidvo.onLang(() => {
+    if (view) repaint();
+    if (lastSay) $('says').textContent = t(...lastSay);
+    renderFooter();
+    if (overlayView && !$('overlay').hidden) $('overlay').replaceChildren(overlayView());
+  });
   // Test hook for the automated browser test only. learn() teaches lesson 1 with the right labels,
-  // nearest() names the remembered example a fruit is copied from, flip() changes one remembered label.
+  // nearest() names the remembered example a fruit is copied from, flip() changes one remembered label,
+  // says() is what SORT-1 would say about a fruit for the band playing.
   if (navigator.webdriver) window.__sorter = {
     classify: (kind, n = 0) => { const g = classify(make(kind, n)); return { apple: g.apple, sure: g.sure }; },
     memorySize: () => memory.length,
     learn: () => { memory = TEACH1.map((k, n) => ({ ...make(k, n), label: KINDS[k].apple === true })); },
     nearest: (kind, n = 3) => { const b = classify(make(kind, n)).nearest; return b && { kind: b.kind, apple: b.label }; },
-    flip: kind => { const ex = memory.find(e => e.kind === kind); if (ex) ex.label = !ex.label; }
+    flip: kind => { const ex = memory.find(e => e.kind === kind); if (ex) ex.label = !ex.label; },
+    says: (kind, n = 3) => { const g = classify(make(kind, n)); return t(g.apple ? 'sayApple' : 'sayNot', { p: g.sure }); }
   };
   intro();
+  let loaded = false;
+  kidvo.onBand(b => { if (loaded && BANDS[b] && b !== band) useBand(b); });
+  kidvo.ready(() => { loaded = true; if (BANDS[kidvo.band]) useBand(kidvo.band); else pickBand(); });
 })();
 </script>
 </body>

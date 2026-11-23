@@ -58,9 +58,13 @@
   .kai-a { align-self: flex-start; max-width: 92%; display: grid; gap: 4px; }
   .kai-a p { margin: 0; padding: 6px 9px; background: var(--kai-panel); border-left: 3px solid var(--kai-text); white-space: pre-wrap; }
   .kai-a.sys p { border-left-color: var(--kai-dim); color: var(--kai-dim); }
-  .kai-flag { justify-self: start; background: none; border: 1px dashed var(--kai-dim); color: var(--kai-dim);
-              font-family: inherit; font-weight: 700; font-size: 11px; line-height: 1; padding: 4px 7px; cursor: pointer; }
-  .kai-flag:hover { color: var(--kai-text); border-color: var(--kai-text); }
+  /* "Not right?" is how a child catches the AI, the point of every game: a real button, not a quiet link. */
+  .kai-flag { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer;
+              background: var(--kai-warn); color: var(--kai-ink); border: 2px solid var(--kai-ink); box-shadow: 2px 2px 0 #000;
+              font-family: inherit; font-weight: 800; font-size: 12px; line-height: 1.1; }
+  .kai-flag svg { width: 11px; height: 11px; flex: none; }
+  .kai-flag:hover { background: #ffb3c7; }
+  .kai-flag:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
   .kai-verdict { font-size: 12px; font-weight: 700; padding: 2px 0 0 2px; }
   .kai-verdict.caught { color: var(--kai-ok); }
   .kai-verdict.fine { color: var(--kai-spark); }
@@ -80,7 +84,7 @@
   .kai-chip:focus-visible, .kai-flag:focus-visible { outline: 3px solid var(--kai-spark); outline-offset: 2px; }
   @media (pointer: coarse) {
     .kai-chip { min-height: 44px; padding: 10px 12px; font-size: 13.5px; }
-    .kai-flag { min-height: 36px; padding: 8px 12px; font-size: 12.5px; }
+    .kai-flag { min-height: 40px; padding: 8px 12px; font-size: 13.5px; }
   }
   /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. The AI's name stays a machine's. */
   [data-band="explorers"] .kai { font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -90,7 +94,8 @@
   [data-band="explorers"] .kai-chip { font-size: 16px; padding: 9px 12px; }
   [data-band="explorers"] .kai-chip .kai-need { font-size: 13px; }
   [data-band="explorers"] .kai-chip .kai-cost .kai-spark { width: 10px; height: 14px; }
-  [data-band="explorers"] .kai-flag { font-size: 14px; }
+  [data-band="explorers"] .kai-flag { font-size: 16px; min-height: 44px; padding: 8px 14px; }
+  [data-band="explorers"] .kai-flag svg { width: 13px; height: 13px; }
   [data-band="explorers"] .kai-verdict { font-size: 15px; }
   @media (max-height: 480px) { .kai-head { padding: 6px 10px; } .kai-face { width: 24px; height: 24px; } .kai-tag { display: none; } .kai-ask { padding: 6px 10px 8px; } .kai-label { display: none; } }
   @media (prefers-reduced-motion: reduce) { .kai.thinking .kai-eye, .kai.thinking .kai-face .led { animation: none; } }
@@ -241,9 +246,13 @@
       records.push(rec);
 
       if (ans.flaggable) {
-        const flag = el('button', 'kai-flag', tx.notRight);
+        const flag = el('button', 'kai-flag');
         flag.type = 'button';
-        track(flag, () => tx.notRight);
+        const mark = el('span');
+        mark.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+        const label = el('span', null, tx.notRight);
+        flag.append(mark.firstChild, label);
+        track(label, () => tx.notRight);
         flag.addEventListener('click', () => {
           if (rec.flagged) return;
           rec.flagged = true;
