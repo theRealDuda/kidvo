@@ -54,6 +54,14 @@ button { font: inherit; color: inherit; }
 }
 .lang-btn[aria-pressed="true"] { background: var(--ink); color: var(--sun); }
 .lang-btn:hover { background: var(--sun); color: var(--ink); }
+/* Read aloud: on and off like a language button; hidden where the device has no voice of its own. */
+#speak {
+  flex: none; display: grid; place-items: center; width: 34px; height: 24px; padding: 0;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); cursor: pointer;
+}
+#speak[hidden] { display: none; }
+#speak[aria-pressed="true"] { background: var(--ink); color: var(--sun); }
+#speak:hover { background: var(--sun); color: var(--ink); }
 
 /* ---------- desktop ---------- */
 #desktop {
@@ -616,6 +624,7 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .win-btns { gap: 6px; }
   .win-btns button { width: 36px; height: 36px; font-size: 16px; }
   .lang-btn { height: 32px; min-width: 42px; }
+  #speak { height: 32px; width: 42px; }
   .view-btn { height: 28px; min-width: 38px; justify-content: center; }
   body[data-view="play"] .win-back { width: 44px; height: 36px; font-size: 24px; }
   #start-btn { height: 38px; }
@@ -630,6 +639,7 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .win-bar { height: 36px; }
   .win-btns button { width: 32px; height: 32px; }
   .lang-btn { height: 28px; }
+  #speak { height: 28px; }
   .view-btn { height: 24px; }
   body[data-view="play"] .win-back { height: 32px; }
   #start-btn, .task, .tray-btn { height: 34px; }
@@ -640,4 +650,10 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .win, .toast, .tiles > *, .cloud, .star, .card:hover .card-art img { animation: none; }
   .card, #page, #sky { transition: none; }
   .card:hover .card-art::after { transition: none; }
+}
+/* The narrowest phones: room in the top bar for the read-aloud switch next to the languages. */
+@media (max-width: 400px) {
+  #topbar { gap: 6px; padding-right: 6px; }
+  .lang-btn { min-width: 34px; padding: 0 4px; }
+  #speak { width: 34px; }
 }

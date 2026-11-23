@@ -50,7 +50,7 @@ kidvoStrings('hu', {
   sayTaught: 'Pontosan azt tanultam meg, amit tanítottál nekem, a hibákkal együtt.',
   whyQ: 'Miért hibázott SORT-1?',
   whyA: 'SORT-1 elromlott.',
-  whyB: 'SORT-1 csak piros almát látott, ezért azt hiszi, az alma mindig piros.',
+  whyB: 'SORT-1 csak piros almát látott.',
   whyC: 'A zöld és a sárga alma nem igazi alma.',
   whyD: 'Rossz példákat is adtam neki.',
   whyB_explorers: 'Csak piros almát látott.',

@@ -585,7 +585,9 @@
         } else {
           text = t(answered ? 'fb_right_said_right' : 'fb_right_said_wrong');
         }
-        card.append(el('p', text), next);
+        const fb = el('p', text);
+        fb.dataset.say = '';
+        card.append(fb, next);
       }
       return card;
     };
@@ -645,6 +647,15 @@
     $('overlay').replaceChildren(view());
     $('overlay').hidden = false;
     focusCard();
+    readCard();
+  }
+  // Read aloud (when the player switched it on in the top bar): a new card is read whole; after an answer,
+  // only the lines marked data-say (the feedback), not the whole card again.
+  function readCard() {
+    const c = $('overlay').querySelector('.card');
+    if (!c) return;
+    const marked = [...c.querySelectorAll('[data-say]')];
+    kidvo.speak(marked.length ? marked.map(n => n.textContent).join(' ') : c.innerText, { fresh: true });
   }
   // Focus the card itself, not its first button: a highlighted answer nudges the child. Tab reaches the buttons.
   function focusCard() { const c = $('overlay').querySelector('.card'); if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); } }
@@ -782,7 +793,8 @@
   };
 
   kidvo.onLang(applyLanguage);
-  pickBand();
+  // The desktop may have said who is playing before this script ran: then the card would only flash (and be read).
+  if (!kidvo.band) pickBand();
   // Who is playing comes from the desktop, which remembers the last choice made in any game.
   let loaded = false;
   kidvo.onBand(b => { if (loaded && BANDS[b] && b !== band) setBand(b, true); });
@@ -806,7 +818,7 @@
         setBand(b, !!saved && saved !== b);
         if (!kidvo.band) kidvo.setBand(b);
       }
-    } catch { /* first visit: keep the picker */ }
+    } catch { if (!band) pickBand(); /* storage failed: ask, rather than show nothing */ }
     loaded = true;
   });
 })();

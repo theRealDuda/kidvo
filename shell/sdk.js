@@ -22,6 +22,9 @@
  *                              K ink, W white, R coral, Y yellow, and your own in opts.colors ({ G: '#7be0c3' }).
  *                              Returns an inline <svg>; opts.scale: 3 makes every pixel 3px (without it your CSS
  *                              sets the size). Pixels of the letter opts.led get class="led" for your CSS to blink.
+ *   kidvo.speak(text, {fresh}) read a line aloud when the player switched read-aloud on (in the top bar), with a voice
+ *                              that runs on the device only; fresh: true drops what was still waiting to be read.
+ *                              Resolves true if it will be read. Games never use speechSynthesis themselves.
  *   kidvo.store.get/set/remove small per-app storage kept in the visitor's browser
  *   kidvo.setHotspot(rect)     overlays only: one clickable spot {x, y, w, h} (max 140x140); clicks arrive as "shell:poke"
  *                              ({ x, y, long }: long is true for a long press, a right-click or the context-menu key)
@@ -61,7 +64,8 @@
     }
     return dict[key];
   }
-  function t(key, vars = {}) {
+  function t(key, vars) {
+    vars = vars || {}; // null too: "no variables"
     const text = pick(lang, key, vars) ?? pick('en', key, vars) ?? key;
     return String(text).replace(/\{(\w+)\}/g, (m, k) => (vars[k] ?? m));
   }
@@ -176,6 +180,9 @@
     setHotspot(rect) { post({ kind: 'hotspot', rect: rect || null }); },
     setModal(on) { post({ kind: 'modal', on: !!on }); },
     onLang(fn) { langFns.add(fn); try { fn(lang); } catch (err) { console.error('[kidvo]', err); } return () => langFns.delete(fn); },
+    // Silent until the desktop said hello: a card drawn before that (who is playing) is gone a moment later.
+    speak: (text, opts = {}) => (standalone || !info || text == null ? Promise.resolve(false)
+      : call('speak', String(text), opts.fresh === true).catch(() => false)),
     get band() { return band; },
     onBand(fn) { bandFns.add(fn); try { fn(band); } catch (err) { console.error('[kidvo]', err); } return () => bandFns.delete(fn); },
     // Takes effect here at once; the desktop's answer only says whether it was remembered for the other games.

@@ -117,6 +117,8 @@
   const sparkIcons = (n, used = 0) => Array.from({ length: n }, (_, i) => el('span', 'kai-spark' + (i >= n - used ? ' used' : '')));
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const val = x => (typeof x === 'function' ? x() : x);
+  // Read aloud, when the player switched it on in the desktop's top bar (the desktop decides; standalone it is silent).
+  const read = (text, fresh = false) => { if (text && window.kidvo && kidvo.speak) kidvo.speak(text, { fresh }); };
 
   function create(root, options) {
     if (!styled) { const s = document.createElement('style'); s.textContent = CSS; document.head.append(s); styled = true; }
@@ -212,6 +214,7 @@
       wrap.append(p);
       log.append(wrap);
       scroll();
+      read(val(text));
     }
 
     async function askQuestion(q) {
@@ -238,6 +241,7 @@
 
       const ans = Object.assign({ text: '', wrong: false, followUps: null, flaggable: true }, q.answer ? q.answer() : {});
       const text = val(ans.text);
+      read(text, true);
       await typeInto(p, text);
       // The language may have changed while it was typing: settle on the current one.
       p.textContent = val(ans.text);
@@ -261,6 +265,7 @@
             rec.wrong ? tx.caught : tx.fine);
           track(v, () => (rec.wrong ? tx.caught : tx.fine));
           wrap.append(v);
+          read(v.textContent, true);
           scroll();
           o.onFlag && o.onFlag(rec, rec.wrong);
           if (window.kidvo) kidvo.emit('ai-flagged', { wasWrong: rec.wrong });

@@ -50,7 +50,7 @@ kidvoStrings('en', {
   sayTaught: 'I learned exactly what you taught me, mistakes included.',
   whyQ: 'Why did SORT-1 make mistakes?',
   whyA: 'SORT-1 is broken.',
-  whyB: 'SORT-1 only saw red apples, so it thinks apples must be red.',
+  whyB: 'SORT-1 only saw red apples.',
   whyC: 'Green and yellow apples are not real apples.',
   whyD: 'I gave it some wrong examples.',
   whyB_explorers: 'It only saw red apples.',

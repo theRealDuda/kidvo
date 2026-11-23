@@ -275,13 +275,20 @@
     nav.replaceChildren(...stepKeys.map((k, i) => el('span', i === phase ? 'on' : (i < phase ? 'done' : ''), `${i + 1} ${t(k)}`)));
   }
   let lastSay = null;
-  async function say(key, vars) {
+  // Read aloud (when the player switched it on in the top bar). SORT-1 says its line, then `more`: what the screen
+  // asks of the child, so a child who cannot read yet still knows what to do.
+  const read = (text, fresh = false) => { if (text) kidvo.speak(text, { fresh }); };
+  // Choices read one after another as sentences (some already end in a full stop).
+  const sentences = xs => xs.map(x => (/[.!?…]$/.test(x.trim()) ? x : x + '.')).join(' ');
+  const readVerdict = () => read($('stage').querySelector('.verdict')?.textContent, true);
+  async function say(key, vars, more) {
     lastSay = [key, vars];
     $('bot').classList.add('thinking');
     $('says').textContent = '...';
     await wait(450);
     $('bot').classList.remove('thinking');
     $('says').textContent = t(key, vars);
+    read(more ? `${t(key, vars)} ${more}` : t(key, vars), true);
   }
   // A new screen starts at the top; a repaint of the same screen (a label tapped, a language switch) keeps the
   // child where they were, scroll and keyboard focus, so labelling the fruit further down never jumps back up.
@@ -341,7 +348,7 @@
 
   function intro() {
     phase = 0; stepKeys = inv() ? STEPS_INV : STEPS; memory = []; scores = { test1: 0, test2: 0, judged: 0, judgedTotal: 0, why: null, mislabelled: 0 };
-    say('hello');
+    say('hello', null, `${t('introTitle')}. ${t('introHint')}`);
     show(() => [el('h2', null, t('introTitle')), el('p', 'hint', t('introHint')), button('start', 'btn', () => teach(TEACH1, 1))]);
   }
 
@@ -349,7 +356,7 @@
   function teach(kinds, round) {
     phase = round === 3 && inv() ? 4 : round === 2 ? 2 : 0;
     const items = round === 3 ? kinds : shuffle(kinds.map((k, n) => ({ ...make(k, n), label: null })));
-    say(round === 2 ? 'teachSay2' : 'teachSay1');
+    say(round === 2 ? 'teachSay2' : 'teachSay1', null, `${t(round === 2 ? 'teachTitle2' : 'teachTitle1')} ${t('teachNeed')}`);
     show(() => {
       const ready = items.every(i => i.label !== null);
       const go = button('teachBtn', 'btn', async () => {
@@ -375,7 +382,7 @@
       const f = items[idx];
       const guess = classify(f);
       let judged = null;
-      say(guess.apple ? 'sayApple' : 'sayNot', { p: guess.sure });
+      say(guess.apple ? 'sayApple' : 'sayNot', { p: guess.sure }, t('testTitle', { n: idx + 1, total: items.length }));
       show(() => {
         const wrap = el('div', 'test');
         const big = el('div', 'big'); big.insertAdjacentHTML('beforeend', svg(f.kind));
@@ -396,6 +403,7 @@
               scores.judgedTotal++; if (childRight) scores.judged++;
               kidvo.emit(childRight && !sortRight ? 'caught' : 'judged', { right: childRight });
               repaint();
+              readVerdict();
             }));
           }
           side.append(row);
@@ -415,6 +423,11 @@
     };
     one();
   }
+
+  // The answers to "why did SORT-1 make mistakes?". Explorers get three short ones with a picture each; the one
+  // about green apples is left out. The order is shuffled once per round, so the right one is not always second.
+  let whyOrder = null;
+  const whys = () => whyOrder || (whyOrder = shuffle(inv() ? ['whyA', 'whyB', 'whyC', 'whyD'] : ['whyA', 'whyB', 'whyD']));
 
   // Pictures for the Explorers' "why" answers: SORT-1 cracked, a red apple, a wrong label.
   function whyPic(k) {
@@ -449,20 +462,21 @@
     const right = results.filter(r => r.sortRight).length;
     if (round === 1) scores.test1 = right; else scores.test2 = right;
     if (round === 1) {
+      whyOrder = null; // a new order for this round's answers
       // Two stories. Usually: SORT-1 only saw red apples (whyB). But when the child's own labels
       // were wrong, SORT-1 learned those mistakes (whyD), and the fix is to correct them in its memory.
       const bad = scores.mislabelled > 0;
       const correct = bad ? 'whyD' : 'whyB';
-      say(bad ? 'sayTaught' : 'saySure');
+      say(bad ? 'sayTaught' : 'saySure', null, `${t('results', { n: right, total: results.length })} ${t('whyQ')} ${sentences(whys().map(k => t(k)))}`);
       let picked = null;
       show(() => {
         const out = [el('h2', null, t('results', { n: right, total: results.length })), resultStrip(results), memoryStrip()];
         out.push(el('h2', null, t('whyQ')));
         const box = el('div', 'choices');
         // Explorers get three short answers with a picture each; the one about green apples is left out.
-        for (const k of inv() ? ['whyA', 'whyB', 'whyC', 'whyD'] : ['whyA', 'whyB', 'whyD']) {
+        for (const k of whys()) {
           // The Bias spotter badge means the child found the red-apple bias, so only the usual story counts.
-          const b = button(k, 'btn alt' + (inv() ? '' : ' pic-btn'), () => { picked = k; if (!bad && scores.why === null) scores.why = k; repaint(); });
+          const b = button(k, 'btn alt' + (inv() ? '' : ' pic-btn'), () => { picked = k; if (!bad && scores.why === null) scores.why = k; repaint(); readVerdict(); });
           b.setAttribute('aria-pressed', picked === k ? 'true' : 'false');
           if (!inv()) { const p = el('span', 'pic'); p.setAttribute('aria-hidden', 'true'); const art = whyPic(k); if (typeof art === 'string') p.innerHTML = art; else p.append(art); b.prepend(p); }
           box.append(b);
@@ -488,7 +502,7 @@
   // before/after compares the corrected lesson with lesson 2.
   function fixMemory() {
     phase = 2;
-    say('fixSay');
+    say('fixSay', null, t('fixHint'));
     show(() => {
       const go = button('relearnBtn', 'btn', async () => {
         scores.mislabelled = memory.filter(i => i.label !== i.apple).length;
@@ -517,7 +531,7 @@
     if (scores.test2 === total) earned.push('badgeTeacher');
     if (scores.judged === scores.judgedTotal) earned.push('badgeEye');
     kidvo.emit('done', { before: scores.test1, after: scores.test2 });
-    say(FINAL[trend].say);
+    say(FINAL[trend].say, null, `${t(FINAL[trend].title)} ${t(FINAL[trend].lesson)}` + (inv() ? ` ${t('thinkQ')} ${sentences(['thinkB', 'thinkA', 'thinkC'].map(k => t(k)))}` : ''));
     let thought = null; // Investigators' answer to the real case
     show(() => {
       const out = [el('h2', null, t(FINAL[trend].title)), resultStrip(results), memoryStrip(), bars([['before', scores.test1, ''], ['after', scores.test2, ' after']], total),
@@ -529,7 +543,7 @@
         out.push(el('p', 'think-q', t('thinkQ')));
         const box = el('div', 'choices');
         for (const k of ['thinkB', 'thinkA', 'thinkC']) {
-          const b = button(k, 'btn alt', () => { thought = k; repaint(); });
+          const b = button(k, 'btn alt', () => { thought = k; repaint(); readVerdict(); });
           b.setAttribute('aria-pressed', thought === k ? 'true' : 'false');
           box.append(b);
         }
@@ -550,7 +564,7 @@
     if (inv()) { phase = 4; stepKeys = STEPS_INV; } else { phase = 0; stepKeys = STEPS3; }
     memory = [];
     const basket = shuffle(BASKET.map((k, n) => ({ ...make(k, n), label: null, picked: false })));
-    say('r3Say');
+    say('r3Say', null, t('r3Hint'));
     show(() => {
       const n = basket.filter(f => f.picked).length;
       const grid = el('div', 'grid basket');
@@ -574,7 +588,7 @@
     const right = results.filter(r => r.sortRight).length;
     const perfect = right === total;
     kidvo.emit('done', { round: 3, score: right });
-    say(perfect ? 'sayThanks' : 'saySure');
+    say(perfect ? 'sayThanks' : 'saySure', null, `${t('results', { n: right, total })} ${t(perfect ? 'r3VerdictGood' : 'r3VerdictMore')}`);
     show(() => {
       const out = [el('h2', null, t('results', { n: right, total })), resultStrip(results), memoryStrip(),
         bars([['after', scores.test2, ' after'], ['yours', right, '']], total), el('p', 'lesson', t(perfect ? 'r3VerdictGood' : 'r3VerdictMore'))];
@@ -593,7 +607,7 @@
     $('overlay').replaceChildren(render());
     $('overlay').hidden = false;
     const card = $('overlay').querySelector('.card');
-    if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); }
+    if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); read(card.innerText, true); }
   }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; $('overlay').replaceChildren(); }
   function renderFooter() {
@@ -636,7 +650,8 @@
     flip: kind => { const ex = memory.find(e => e.kind === kind); if (ex) ex.label = !ex.label; },
     says: (kind, n = 3) => { const g = classify(make(kind, n)); return t(g.apple ? 'sayApple' : 'sayNot', { p: g.sure }); }
   };
-  intro();
+  // Without a band yet, the intro shows behind the card; with one already known, ready() starts it for that band.
+  if (!kidvo.band) intro();
   let loaded = false;
   kidvo.onBand(b => { if (loaded && BANDS[b] && b !== band) useBand(b); });
   kidvo.ready(() => { loaded = true; if (BANDS[kidvo.band]) useBand(kidvo.band); else pickBand(); });

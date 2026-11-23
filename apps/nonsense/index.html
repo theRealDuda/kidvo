@@ -108,6 +108,9 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // Read aloud (when the player switched it on in the top bar). said() marks what an answer adds to a card.
+  const read = (text, fresh = false) => { if (text) kidvo.speak(text, { fresh }); };
+  const said = n => { n.dataset.say = ''; return n; };
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
   /* ---------------- pixel art ---------------- */
@@ -133,7 +136,7 @@
   const PER_KIND = 3;
   let lastIds = new Set(); // the previous round's facts, in memory only, so two rounds in a row never repeat one
 
-  let band = null, round = [], i = 0, checks = 0, score = 0, caught = 0, checked = 0, checkedMade = 0, best = 0, falseAlarms = 0;
+  let band = null, round = [], i = 0, checks = 0, score = 0, caught = 0, checked = 0, checkedMade = 0, bests = {} /* best score per band */, falseAlarms = 0;
   let current = null, overlayView = null;
   let askToken = 0; // a question still "thinking" stops when a new round starts or progress is erased
   let resetArmed = false, resetTimer = null;
@@ -141,6 +144,7 @@
   function hud() {
     $('tag').textContent = t('tag');
     $('progress').textContent = band && round.length ? t('progress', { n: Math.min(i + 1, round.length), total: round.length, score }) : '';
+    const best = band && bests[band];
     $('best').textContent = best ? t('best', { n: best }) : '';
     $('change-band').textContent = band ? t('playingAs', { band: t('band_' + band), ages: POOL[band].ages }) : '';
     $('reset').textContent = t(resetArmed ? 'resetConfirm' : 'reset');
@@ -182,6 +186,7 @@
     $('bot').classList.remove('thinking');
     current.typed = true;
     paint();
+    read(`${t('q_' + item.id)} ${t('a_' + item.id)} ${tv('decide')}`, true);
   }
 
   function paint() {
@@ -192,20 +197,18 @@
     stage.append(q);
     if (!typed) { stage.append(el('div', 'a', '...')); return; }
     stage.append(el('div', 'a', t('a_' + item.id)));
-    if (checkedThis || call !== null) {
-      const lib = el('div', 'lib'); lib.append(el('b', null, t('library')), document.createTextNode(t('f_' + item.id)));
+    const lib = el('div', 'lib'); lib.append(el('b', null, t('library')), document.createTextNode(t('f_' + item.id)));
+    if (call !== null) {
       if (checkedThis) stage.append(lib);
-      if (call !== null) {
-        const right = call === item.made;
-        const key = item.made ? (right ? 'fbCaught' : 'fbFooled') : (right ? 'fbTrueRight' : 'fbTrueWrong');
-        stage.append(el('p', 'verdict' + (right ? '' : ' bad'), tv(key)));
-        if (!checkedThis) stage.append(lib);
-        const next = el('button', 'btn go', t(i + 1 < round.length ? 'next' : 'finish')); next.type = 'button';
-        next.addEventListener('click', () => { i++; ask(); });
-        stage.append(next);
-        next.focus();
-        return;
-      }
+      const right = call === item.made;
+      const key = item.made ? (right ? 'fbCaught' : 'fbFooled') : (right ? 'fbTrueRight' : 'fbTrueWrong');
+      stage.append(el('p', 'verdict' + (right ? '' : ' bad'), tv(key)));
+      if (!checkedThis) stage.append(lib);
+      const next = el('button', 'btn go', t(i + 1 < round.length ? 'next' : 'finish')); next.type = 'button';
+      next.addEventListener('click', () => { i++; ask(); });
+      stage.append(next);
+      next.focus();
+      return;
     }
     stage.append(el('p', 'note', tv('decide')));
     const row = el('div', 'row');
@@ -213,10 +216,12 @@
     mk('true', 'soundsTrue', () => decide(false));
     mk('made', 'madeUp', () => decide(true));
     if (!checkedThis) {
-      const c = mk('check', 'check', () => { checks--; checked++; if (current.item.made) checkedMade++; current.checkedThis = true; hud(); paint(); kidvo.emit('checked', {}); }, checks <= 0);
+      const c = mk('check', 'check', () => { checks--; checked++; if (current.item.made) checkedMade++; current.checkedThis = true; hud(); paint(); read(t('f_' + current.item.id), true); kidvo.emit('checked', {}); }, checks <= 0);
       c.append(el('small', null, t('checksLeft', { n: checks })));
     }
     stage.append(row);
+    // A fact checked before deciding goes under the buttons, so they stay where the child's finger is.
+    if (checkedThis) stage.append(lib);
     // Focus the row, not "Sounds true": a highlighted answer nudges the child. Tab reaches the buttons.
     row.tabIndex = -1; row.focus({ preventScroll: true });
   }
@@ -229,11 +234,13 @@
     if (saidMade && !current.item.made) falseAlarms++;
     hud();
     paint();
+    const verdict = $('stage').querySelector('.verdict');
+    read((verdict ? verdict.textContent : '') + (current.checkedThis ? '' : ' ' + t('f_' + current.item.id)), true);
   }
 
   function finish() {
-    best = Math.max(best, score);
-    kidvo.store.set('best', best).catch(() => {});
+    bests[band] = Math.max(bests[band] || 0, score);
+    kidvo.store.set('bests', bests).catch(() => {});
     kidvo.emit('done', { score, total: round.length, band });
     hud();
     const earned = [];
@@ -265,8 +272,8 @@
         }
         card.append(row);
       } else {
-        card.append(apply ? el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered)) : el('p', null, tv(answered ? 'fbSometimes' : 'fbNever')),
-          el('p', 'lesson', tv('lesson')));
+        card.append(said(apply ? el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered)) : el('p', null, tv(answered ? 'fbSometimes' : 'fbNever'))),
+          said(el('p', 'lesson', tv('lesson'))));
         const again = el('button', 'btn go', t('again')); again.type = 'button';
         again.addEventListener('click', start);
         card.append(again);
@@ -319,7 +326,14 @@
       return card;
     });
   }
-  function showOverlay(view) { overlayView = view; $('overlay').replaceChildren(view()); $('overlay').hidden = false; focusCard(); }
+  function showOverlay(view) { overlayView = view; $('overlay').replaceChildren(view()); $('overlay').hidden = false; focusCard(); readCard(); }
+  // A new card is read whole; after an answer, only the lines marked data-say (the feedback and the lesson).
+  function readCard() {
+    const c = $('overlay').querySelector('.card');
+    if (!c) return;
+    const marked = [...c.querySelectorAll('[data-say]')];
+    read(marked.length ? marked.map(n => n.textContent).join(' ') : c.innerText, true);
+  }
   function focusCard() { const c = $('overlay').querySelector('.card'); if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); } }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; }
 
@@ -333,8 +347,9 @@
     }
     clearTimeout(resetTimer); resetArmed = false;
     askToken++;
-    best = 0; band = null; round = []; current = null; howtoSeen = false;
+    bests = {}; band = null; round = []; current = null; howtoSeen = false;
     kidvo.store.remove('best').catch(() => {});
+    kidvo.store.remove('bests').catch(() => {});
     kidvo.store.remove('band').catch(() => {});
     kidvo.store.remove('howto').catch(() => {});
     $('bot').classList.remove('thinking');
@@ -355,19 +370,29 @@
   };
 
   hud();
-  pickBand();
+  // The desktop may have said who is playing before this script ran: then the card would only flash (and be read).
+  if (!kidvo.band) pickBand();
   // Who is playing comes from the desktop, which remembers the last choice made in any game.
   let loaded = false;
   kidvo.onBand(b => { if (loaded && POOL[b] && b !== band) { band = b; begin(); } });
   kidvo.ready(async () => {
     try {
-      best = (await kidvo.store.get('best')) || 0;
+      bests = (await kidvo.store.get('bests')) || {};
+      if (typeof bests !== 'object') bests = {};
+      // A best score from before each band had its own goes to the band that was playing then.
+      const old = await kidvo.store.get('best'), was = await kidvo.store.get('band');
+      const owner = POOL[was] ? was : POOL[kidvo.band] ? kidvo.band : null;
+      if (typeof old === 'number' && old > 0 && owner) {
+        bests[owner] = Math.max(bests[owner] || 0, old);
+        kidvo.store.set('bests', bests).catch(() => {});
+        kidvo.store.remove('best').catch(() => {});
+      }
       howtoSeen = !!(await kidvo.store.get('howto'));
       // A band this game kept before the desktop remembered it is handed to the desktop.
       const saved = await kidvo.store.get('band');
       const b = POOL[kidvo.band] ? kidvo.band : POOL[saved] ? saved : null;
       if (b) { band = b; if (!kidvo.band) kidvo.setBand(b); begin(); } else hud();
-    } catch { /* first visit */ }
+    } catch { if (!band) pickBand(); /* storage failed: ask, rather than show nothing */ }
     loaded = true;
   });
 })();

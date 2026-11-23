@@ -50,7 +50,7 @@ kidvoStrings('ro', {
   sayTaught: 'Am învățat exact ce m-ai învățat, cu greșeli cu tot.',
   whyQ: 'De ce a greșit SORT-1?',
   whyA: 'SORT-1 e stricat.',
-  whyB: 'SORT-1 a văzut doar mere roșii, așa că crede că merele trebuie să fie roșii.',
+  whyB: 'SORT-1 a văzut doar mere roșii.',
   whyC: 'Merele verzi și galbene nu sunt mere adevărate.',
   whyD: 'I-am dat și exemple greșite.',
   whyB_explorers: 'A văzut doar mere roșii.',

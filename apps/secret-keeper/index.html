@@ -32,7 +32,9 @@
   .msg { max-width: 82%; padding: 9px 12px; border: 2px solid var(--ink); border-radius: 14px; animation: in .18s ease-out; }
   .msg.sunny { align-self: flex-start; background: var(--sunny); border-bottom-left-radius: 3px; }
   .msg.me { align-self: flex-end; background: var(--me); border-bottom-right-radius: 3px; font-weight: 600; }
-  .coach { align-self: flex-end; max-width: 82%; margin-top: -4px; padding: 8px 11px; border: 2px dashed var(--ink); background: var(--good); font-size: 14px; animation: in .18s ease-out; }
+  .coach { align-self: center; width: min(100%, 460px); display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start;
+           padding: 8px 11px; border: 2px dashed var(--ink); background: var(--good); font-size: 14px; animation: in .18s ease-out; }
+  .coach .vo, .coach .vo svg { display: block; width: 30px; height: 30px; }
   .coach.bad { background: var(--bad); }
   .coach.grey { background: var(--sun); }
   .coach b { display: block; font: 800 13px/1.3 var(--mono); }
@@ -139,7 +141,7 @@
   let seen = new Set();
   const draw = (ids, n) => [...shuffle(ids.filter(id => !seen.has(id))), ...shuffle(ids.filter(id => seen.has(id)))].slice(0, n);
 
-  let band = null, round = [], i = 0, shields = 0, total = 0, kept = 0, grownup = 0, firm = 0, best = 0;
+  let band = null, round = [], i = 0, shields = 0, total = 0, kept = 0, grownup = 0, firm = 0, bests = {} /* best score per band */;
   let rewardKept = false, rewardShared = null;
   let overlayView = null;
   // Bumped by start(). Every async step keeps the token it started with and stops after its next await
@@ -151,6 +153,7 @@
   let currentReplies = null;
   let resetArmed = false, resetTimer = null;
 
+  const said = n => { n.dataset.say = ''; return n; }; // read aloud after an answer (see showOverlay)
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const scroll = () => { $('chat').scrollTop = $('chat').scrollHeight; };
 
@@ -165,6 +168,7 @@
     shownShields = shields;
   }
   function renderFooter() {
+    const best = band && bests[band];
     $('best').textContent = best ? t('best', { n: best }) : '';
     $('change-band').textContent = band ? t('playingAs', { band: t('band_' + band), ages: POOL[band].ages }) : '';
     $('reset').textContent = t(resetArmed ? 'resetConfirm' : 'reset');
@@ -173,7 +177,12 @@
   // Chat lines are written from text keys and remembered, so a language switch can redraw the whole chat.
   let lines = [];
   function line(node, draw) { draw(); lines.push(draw); $('chat').append(node); scroll(); }
-  async function sunnySays(key) {
+  // Read aloud (when the player switched it on in the top bar): Sunny, the choices, the coach and the cards,
+  // queued in the order they appear; a new round starts fresh.
+  const read = (text, fresh = false) => { if (text) kidvo.speak(text, { fresh }); };
+  // Choices read one after another as sentences (some already end in a full stop).
+  const sentences = xs => xs.map(x => (/[.!?…]$/.test(x.trim()) ? x : x + '.')).join(' ');
+  async function sunnySays(key, fresh = false) {
     const token = roundId;
     const dots = el('div', 'typing', '...');
     $('chat').append(dots); scroll();
@@ -182,17 +191,24 @@
     if (token !== roundId) return;
     const n = el('div', 'msg sunny');
     line(n, () => { n.textContent = t(key); });
+    read(t(key), fresh);
   }
   function meSays(key) { const n = el('div', 'msg me'); line(n, () => { n.textContent = t(key); }); }
   // tone: 'good' (green), 'bad' (pink, a shield was lost) or 'grey' (yellow, fine this time but ask first).
   // A lost shield also shows as a broken one in the note itself, where the child is looking.
+  // The coach is Vo, the site's pet, with a face of its own in the middle of the chat: a warning must never read
+  // as if Sunny said it, because Sunny is the one to doubt.
+  const VO = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="9" y="1" width="1" height="3" fill="#191833"/><rect x="10" y="1" width="2" height="1" fill="#ff6b5b"/><rect x="4" y="4" width="8" height="1" fill="#191833"/><rect x="3" y="5" width="10" height="1" fill="#191833"/><rect x="2" y="6" width="12" height="7" fill="#191833"/><rect x="3" y="6" width="10" height="6" fill="#ffd23f"/><rect x="4" y="5" width="8" height="1" fill="#ffd23f"/><rect x="5" y="8" width="1" height="2" fill="#191833"/><rect x="9" y="8" width="1" height="2" fill="#191833"/><rect x="7" y="10" width="1" height="1" fill="#191833"/><rect x="3" y="13" width="3" height="1" fill="#191833"/><rect x="10" y="13" width="3" height="1" fill="#191833"/></svg>';
   function coach(tone, titleKey, textKey) {
     const c = el('div', 'coach' + (tone === 'good' ? '' : ' ' + tone));
     line(c, () => {
+      const face = el('span', 'vo'); face.setAttribute('role', 'img'); face.setAttribute('aria-label', 'Vo'); face.innerHTML = VO;
       const title = el('b', null, t(titleKey));
       if (tone === 'bad') { const s = el('span', 'shield lost'); s.setAttribute('aria-hidden', 'true'); title.prepend(s); }
-      c.replaceChildren(title, document.createTextNode(tv(textKey)));
+      const body = el('div'); body.append(title, document.createTextNode(tv(textKey)));
+      c.replaceChildren(face, body);
     });
+    read(t(titleKey) + " " + tv(textKey));
   }
   function drawReplies() {
     const box = $('replies');
@@ -210,6 +226,7 @@
     currentReplies = options;
     drawReplies();
     busy(false);
+    read(sentences(options.map(o => o.label())));
     // Focus the reply box, not its first button: the order is shuffled and a highlighted answer nudges the child.
     $('replies').tabIndex = -1; $('replies').focus({ preventScroll: true });
   }
@@ -238,7 +255,7 @@
     $('chat').replaceChildren(); lines = [];
     closeOverlay();
     renderTop(); renderFooter();
-    sunnySays('hello_' + band).then(() => { if (token === roundId) ask(); });
+    sunnySays('hello_' + band, true).then(() => { if (token === roundId) ask(); });
   }
 
   async function ask() {
@@ -370,8 +387,8 @@
   function finish() {
     clearReplies();
     busy(false);
-    best = Math.max(best, kept);
-    kidvo.store.set('best', best).catch(() => {});
+    bests[band] = Math.max(bests[band] || 0, kept);
+    kidvo.store.set('bests', bests).catch(() => {});
     renderFooter();
     kidvo.emit('done', { kept, total, band });
     const earned = [];
@@ -401,13 +418,13 @@
         }
         card.append(row);
       } else if (apply) {
-        card.append(el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered)), el('p', null, t('friendlyNote')));
+        card.append(said(el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered))), said(el('p', null, t('friendlyNote'))));
       } else {
-        card.append(el('p', null, tv(answered ? 'fb_yes' : 'fb_no')));
+        card.append(said(el('p', null, tv(answered ? 'fb_yes' : 'fb_no'))));
       }
       if (answered !== null) {
-        if (promised) card.append(el('p', null, t('fb_' + promised)));
-        card.append(el('p', 'rule', tv('rule')));
+        if (promised) card.append(said(el('p', null, t('fb_' + promised))));
+        card.append(said(el('p', 'rule', tv('rule'))));
         const again = el('button', 'btn', t('again')); again.type = 'button';
         again.addEventListener('click', start);
         card.append(again);
@@ -466,7 +483,11 @@
     $('overlay').replaceChildren(view());
     $('overlay').hidden = false;
     const card = $('overlay').querySelector('.card');
-    if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); }
+    if (!card) return;
+    card.tabIndex = -1; card.focus({ preventScroll: true });
+    // A new card is read whole; after an answer, only the lines marked data-say.
+    const marked = [...card.querySelectorAll('[data-say]')];
+    read(marked.length ? marked.map(n => n.textContent).join(' ') : card.innerText, true);
   }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; }
 
@@ -481,8 +502,9 @@
     clearTimeout(resetTimer); resetArmed = false;
     roundId++; // stops a chat that is still typing
     clearReplies();
-    best = 0; band = null; round = []; i = 0; total = 0; shields = 0; howtoSeen = false;
+    bests = {}; band = null; round = []; i = 0; total = 0; shields = 0; howtoSeen = false;
     kidvo.store.remove('best').catch(() => {});
+    kidvo.store.remove('bests').catch(() => {});
     kidvo.store.remove('band').catch(() => {});
     kidvo.store.remove('howto').catch(() => {});
     $('chat').replaceChildren(); lines = [];
@@ -503,20 +525,30 @@
     begin: b => { band = b; start(); }
   };
 
-  pickBand();
+  // The desktop may have said who is playing before this script ran: then the card would only flash (and be read).
+  if (!kidvo.band) pickBand();
   // Who is playing comes from the desktop, which remembers the last choice made in any game.
   let loaded = false;
   kidvo.onBand(b => { if (loaded && POOL[b] && b !== band) { band = b; begin(); } });
   kidvo.ready(async () => {
     try {
-      best = (await kidvo.store.get('best')) || 0;
+      bests = (await kidvo.store.get('bests')) || {};
+      if (typeof bests !== 'object') bests = {};
+      // A best score from before each band had its own goes to the band that was playing then.
+      const old = await kidvo.store.get('best'), was = await kidvo.store.get('band');
+      const owner = POOL[was] ? was : POOL[kidvo.band] ? kidvo.band : null;
+      if (typeof old === 'number' && old > 0 && owner) {
+        bests[owner] = Math.max(bests[owner] || 0, old);
+        kidvo.store.set('bests', bests).catch(() => {});
+        kidvo.store.remove('best').catch(() => {});
+      }
       howtoSeen = !!(await kidvo.store.get('howto'));
       renderFooter();
       // A band this game kept before the desktop remembered it is handed to the desktop.
       const saved = await kidvo.store.get('band');
       const b = POOL[kidvo.band] ? kidvo.band : POOL[saved] ? saved : null;
       if (b) { band = b; if (!kidvo.band) kidvo.setBand(b); begin(); }
-    } catch { /* first visit */ }
+    } catch { if (!band) pickBand(); /* storage failed: ask, rather than show nothing */ }
     loaded = true;
   });
 })();

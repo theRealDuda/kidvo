@@ -261,6 +261,19 @@ async function run(name) {
     if (bad) throw new Error(bad);
   });
 
+  // A library check shows the fact under the answer buttons, so they stay where the child's finger is.
+  await step('nonsense: checking the library leaves the answer buttons where they were', async () => {
+    const moved = await appFrame(page, 'nonsense').evaluate(async () => {
+      window.__nonsense.play('investigators');
+      await new Promise(r => setTimeout(r, 900));
+      const top = () => document.querySelector('#stage .btn.true').getBoundingClientRect().top;
+      const before = top();
+      document.querySelector('#stage .btn.check').click();
+      return top() - before;
+    });
+    if (Math.abs(moved) > 1) throw new Error(`the buttons moved ${moved}px`);
+  });
+
   // Robot Maze is a run of 8 levels that ends in a finale card. The test walks the shortest route
   // through every Investigator level, then plays the run again.
   await step('Robot Maze runs to the finale', async () => {
@@ -323,6 +336,51 @@ async function run(name) {
         .catch(() => { throw new Error('a game opened later asked who is playing again'); });
     } finally {
       await later.close();
+    }
+  });
+
+  // Read aloud uses only a voice that runs on the device. A stand-in speech engine offers an English voice on the
+  // device and a Hungarian one that is not: English gets the switch and a game is read with the device's voice;
+  // Hungarian gets no switch, and nothing is read with the network voice.
+  await step('read aloud speaks with a voice on the device only', async () => {
+    const sp = await desk.newPage();
+    sp.on('pageerror', err => problems.push(`${name} read-aloud page error: ${err.message}`));
+    try {
+      await sp.addInitScript(() => {
+        if (window !== window.top) return;
+        const voices = [{ name: 'Device', lang: 'en-US', localService: true, default: true }, { name: 'Network', lang: 'hu-HU', localService: false, default: false }];
+        window.__spoken = [];
+        class Utterance { constructor(text) { this.text = text; } }
+        Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
+        Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+          getVoices: () => voices, cancel: () => {}, addEventListener: () => {},
+          speak: u => window.__spoken.push({ text: u.text, voice: u.voice && u.voice.name })
+        } });
+      });
+      await sp.goto(`${SITE}/`);
+      await sp.waitForFunction(() => window.kidvoShell, null, { timeout: 5000 });
+      await sp.evaluate(() => window.kidvoShell.setLang('en'));
+      if (!(await sp.locator('#speak').isVisible())) throw new Error('no read-aloud switch, although the device has an English voice');
+      await sp.click('#speak');
+      await sp.evaluate(() => window.kidvoShell.openApp('nonsense'));
+      await sp.frameLocator('iframe[src^="apps/nonsense/"]').locator('body').waitFor({ timeout: 5000 });
+      await sp.waitForTimeout(600);
+      const f = appFrame(sp, 'nonsense');
+      if (!f) throw new Error('game frame not found');
+      await handshake(f);
+      await sp.waitForFunction(() => window.__spoken.some(s => s.voice === 'Device' && s.text.includes('?')), null, { timeout: 4000 })
+        .catch(() => { throw new Error('the question was not read aloud'); });
+      await sp.evaluate(() => window.kidvoShell.setLang('hu'));
+      if (await sp.locator('#speak').isVisible()) throw new Error('a read-aloud switch for a language that has only a network voice');
+      const before = await sp.evaluate(() => window.__spoken.length);
+      if (await f.evaluate(() => kidvo.speak('teszt')) !== false) throw new Error('a line was accepted for reading in Hungarian');
+      if (await sp.evaluate(n => window.__spoken.length - n, before)) throw new Error('something was read with no voice on the device');
+      if (await sp.evaluate(() => window.__spoken.some(s => s.voice === 'Network'))) throw new Error('the network voice was used');
+      // Leave the switch off for the pages that follow (it is kept in this browser).
+      await sp.evaluate(() => window.kidvoShell.setLang('en'));
+      await sp.click('#speak');
+    } finally {
+      await sp.close();
     }
   });
 
@@ -411,6 +469,13 @@ async function run(name) {
     const ctx = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
     await ctx.addInitScript(() => {
       try { if (!localStorage.getItem('kidvo:shell')) localStorage.setItem('kidvo:shell', JSON.stringify({ band: 'explorers' })); } catch { /* a game frame has no storage */ }
+      // A voice on the device, so the read-aloud switch is in the top bar when it has to fit.
+      if (window === window.top) {
+        Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: class { constructor(text) { this.text = text; } } });
+        Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+          getVoices: () => [{ name: 'Device', lang: 'en-US', localService: true, default: true }], speak() {}, cancel() {}, addEventListener() {}
+        } });
+      }
     });
     await guard(ctx, `${name} ${label}`);
     const phone = await ctx.newPage();
@@ -418,6 +483,7 @@ async function run(name) {
     await phone.goto(`${SITE}/`);
     await phone.waitForFunction(() => window.kidvoShell, null, { timeout: 5000 });
     await step(`the games page and its top bar fit a ${label} screen`, async () => {
+      if (!(await phone.locator('#speak').isVisible())) throw new Error('the read-aloud switch is not in the top bar, so the test proves less');
       const over = await phone.evaluate(() => {
         const wide = n => n.scrollWidth - n.clientWidth;
         return { page: wide(document.documentElement), play: wide(document.getElementById('play')), bar: wide(document.getElementById('topbar')) };
