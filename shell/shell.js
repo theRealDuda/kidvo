@@ -265,6 +265,7 @@
     const rec = wins.get(id);
     if (!rec) return;
     rec.minimized = true;
+    hush(id);
     playSend(id); // back to the games (or minimized on the desktop): this stretch of play is over
     rec.node.hidden = true;
     rec.task.classList.add('min');
@@ -341,6 +342,7 @@
     const rec = wins.get(id);
     if (!rec) return;
     if (rec.frame) frames.delete(rec.frame.contentWindow);
+    hush(id);
     playSend(id);
     plays.delete(id);
     rec.node.remove();
@@ -1005,8 +1007,10 @@
     // Read aloud, when the switch is on: only for a game window on screen (not one waiting behind its card).
     speak: (ctx, text, fresh) => {
       const rec = wins.get(ctx.winId);
-      if (!rec || rec.minimized || typeof text !== 'string' || !text.trim()) return false;
-      return speak(text, fresh === true);
+      if (!rec || rec.minimized || rec.id !== focusedId || typeof text !== 'string' || !text.trim()) return false;
+      if (!speak(text, fresh === true)) return false;
+      speaker = rec.id;
+      return true;
     },
     // Only a game that declares the band may choose it (overlays and built-in windows have none).
     setBand: (ctx, b) => {
@@ -1232,6 +1236,18 @@
   // text to a speech service. With no such voice for the language, the switch does not appear.
   const synth = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function' ? window.speechSynthesis : null;
   let speakOn = prefs.get('speak') === true;
+  let speaker = null; // the window whose lines are being read
+  // A game that goes back behind its card or closes takes its lines with it.
+  function hush(id) { if (synth && speaker === id) { synth.cancel(); speaker = null; } }
+  // iOS starts speech only from a tap on this page, not from a message, so a switch that was left on is woken by
+  // the first tap here (a game card, the top bar) with a silent line.
+  if (synth && speakOn) document.addEventListener('pointerdown', () => {
+    const voice = speakOn && localVoice();
+    if (!voice) return;
+    const u = new SpeechSynthesisUtterance('');
+    u.voice = voice; // never the browser's default, which may be a network voice
+    synth.speak(u);
+  }, { once: true, capture: true });
   function localVoice() {
     if (!synth) return null;
     const mine = synth.getVoices().filter(v => v.localService === true && String(v.lang).toLowerCase().replace('_', '-').split('-')[0] === lang);
@@ -1261,6 +1277,7 @@
     speakOn = !speakOn;
     prefs.set('speak', speakOn);
     if (speakOn) speak(T('readAloudOn'), true); else if (synth) synth.cancel();
+    speaker = null;
     renderSpeak();
   });
   // Voices load late in some browsers, and a new language may have none.

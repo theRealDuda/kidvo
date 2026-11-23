@@ -545,7 +545,7 @@
       howtoSeen = !!(await kidvo.store.get('howto'));
       renderFooter();
       // A band this game kept before the desktop remembered it is handed to the desktop.
-      const saved = await kidvo.store.get('band');
+      const saved = was;
       const b = POOL[kidvo.band] ? kidvo.band : POOL[saved] ? saved : null;
       if (b) { band = b; if (!kidvo.band) kidvo.setBand(b); begin(); }
     } catch { if (!band) pickBand(); /* storage failed: ask, rather than show nothing */ }

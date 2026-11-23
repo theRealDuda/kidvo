@@ -353,7 +353,7 @@ async function run(name) {
         class Utterance { constructor(text) { this.text = text; } }
         Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
         Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
-          getVoices: () => voices, cancel: () => {}, addEventListener: () => {},
+          getVoices: () => voices, cancel: () => { window.__cancels = (window.__cancels || 0) + 1; }, addEventListener: () => {},
           speak: u => window.__spoken.push({ text: u.text, voice: u.voice && u.voice.name })
         } });
       });
@@ -376,8 +376,13 @@ async function run(name) {
       if (await f.evaluate(() => kidvo.speak('teszt')) !== false) throw new Error('a line was accepted for reading in Hungarian');
       if (await sp.evaluate(n => window.__spoken.length - n, before)) throw new Error('something was read with no voice on the device');
       if (await sp.evaluate(() => window.__spoken.some(s => s.voice === 'Network'))) throw new Error('the network voice was used');
-      // Leave the switch off for the pages that follow (it is kept in this browser).
+      // A game sent back behind its card takes its lines with it.
       await sp.evaluate(() => window.kidvoShell.setLang('en'));
+      const cancels = await sp.evaluate(() => window.__cancels || 0);
+      // Back to the games on the games page, minimize on the desktop: whichever this view shows.
+      await sp.evaluate(() => [...document.querySelectorAll('.win:not([hidden]) [data-act="back"], .win:not([hidden]) [data-act="min"]')].find(b => b.offsetParent).click());
+      if (await sp.evaluate(n => (window.__cancels || 0) - n, cancels) < 1) throw new Error('the game went back to its card and kept talking');
+      // Leave the switch off for the pages that follow (it is kept in this browser).
       await sp.click('#speak');
     } finally {
       await sp.close();

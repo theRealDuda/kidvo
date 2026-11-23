@@ -651,9 +651,9 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .card, #page, #sky { transition: none; }
   .card:hover .card-art::after { transition: none; }
 }
-/* The narrowest phones: room in the top bar for the read-aloud switch next to the languages. */
+/* The narrowest phones: room in the top bar for the read-aloud switch. The buttons keep their finger size;
+   the name gives way and the logo stays. */
 @media (max-width: 400px) {
   #topbar { gap: 6px; padding-right: 6px; }
-  .lang-btn { min-width: 34px; padding: 0 4px; }
-  #speak { width: 34px; }
+  .tb-brand { font-size: 0; gap: 0; }
 }
