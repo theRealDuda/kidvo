@@ -91,6 +91,12 @@
   const playing = () => view === 'play';
   const calm = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches || !Element.prototype.animate;
 
+  /* ---------------- who is playing: one age band for every game ---------------- */
+  // Chosen in the first game that asks, kept in this browser and sent to every game, like the language.
+  // null until a child has chosen; every game then shows its own "Who is playing?" card.
+  const BANDS = ['explorers', 'investigators'];
+  let band = BANDS.includes(prefs.get('band')) ? prefs.get('band') : null;
+
   /* ---------------- per-app storage ---------------- */
   const store = {
     read(appId) {
@@ -994,6 +1000,12 @@
       return true;
     },
     windows: () => windowRects(),
+    // Only a game that declares the band may choose it (overlays and built-in windows have none).
+    setBand: (ctx, b) => {
+      if (!apps.get(ctx.appId)?.bands?.includes(b)) throw new Error('not one of this game\'s age bands: ' + b);
+      setBand(b);
+      return true;
+    },
     apps: () => [...apps.values()].map(a => ({ id: a.id, name: a.name, type: a.type, skills: a.skills || [], open: [...wins.values()].some(r => r.appId === a.id) || overlays.has(a.id) })),
     'store.get': (ctx, key) => readStore(ctx.appId)[String(key)] ?? null,
     'store.set': (ctx, key, value) => {
@@ -1018,7 +1030,7 @@
 
     switch (m.kind) {
       case 'hello':
-        reply({ kind: 'init', appId: ctx.appId, winId: ctx.winId, lang });
+        reply({ kind: 'init', appId: ctx.appId, winId: ctx.winId, lang, band });
         break;
       case 'sub':
         // Every broadcast walks every pattern, so one app may hold at most 32.
@@ -1195,6 +1207,14 @@
     for (const win of frames.keys()) { try { win.postMessage({ kidvo: 1, kind: 'lang', lang }, '*'); } catch { /* gone */ } }
   }
 
+  // A child chose who is playing in one game: remember it, and every open game switches too.
+  function setBand(b) {
+    if (!BANDS.includes(b) || b === band) return;
+    band = b;
+    prefs.set('band', b);
+    for (const win of frames.keys()) { try { win.postMessage({ kidvo: 1, kind: 'band', band }, '*'); } catch { /* gone */ } }
+  }
+
   /* ---------------- boot ---------------- */
   const browserLang = (navigator.languages || [navigator.language || 'en']).map(x => String(x).slice(0, 2).toLowerCase()).find(x => LANGS.includes(x));
   document.body.dataset.view = view;
@@ -1219,5 +1239,5 @@
   }
 
   // A small, read-only handle for tests and curious people in the console.
-  window.kidvoShell = Object.freeze({ openApp, closeWindow, setLang, setView, view: () => view, apps: () => [...apps.keys()], windows: windowRects });
+  window.kidvoShell = Object.freeze({ openApp, closeWindow, setLang, setView, view: () => view, band: () => band, apps: () => [...apps.keys()], windows: windowRects });
 })();

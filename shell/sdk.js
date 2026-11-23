@@ -14,6 +14,10 @@
  *   kidvo.onLang(fn)           fn(lang) now and whenever the player switches language
  *   kidvo.t(key, vars)         your text in the current language, e.g. kidvo.t('steps', { n: 3 })
  *                              (falls back to English; keys ending in _one/_few/_other are plural forms)
+ *   kidvo.band                 who is playing: "explorers" (7–9), "investigators" (10–13), or null until a child chose
+ *   kidvo.onBand(fn)           fn(band) now and whenever it changes (a child may change it in another game)
+ *   kidvo.setBand(band)        the child chose in your game: the desktop remembers it and every game hears it.
+ *                              Your page's <html> carries data-band="explorers" or "investigators" for your CSS.
  *   kidvo.store.get/set/remove small per-app storage kept in the visitor's browser
  *   kidvo.setHotspot(rect)     overlays only: one clickable spot {x, y, w, h} (max 140x140); clicks arrive as "shell:poke"
  *                              ({ x, y, long }: long is true for a long press, a right-click or the context-menu key)
@@ -25,7 +29,7 @@
  *   kidvoStrings('en', { hello: 'Hello {name}!', steps_one: '{n} step', steps_other: '{n} steps' });
  *
  * All calls return Promises. Everything works (quietly) when opened standalone,
- * so you can develop your app by opening its index.html directly.
+ * so you can develop your app by opening its index.html directly (?lang=hu and ?band=explorers work there).
  */
 (() => {
   'use strict';
@@ -64,6 +68,18 @@
     for (const fn of langFns) { try { fn(lang); } catch (err) { console.error('[kidvo]', err); } }
   }
 
+  /* ---------- who is playing ---------- */
+  const BANDS = ['explorers', 'investigators'];
+  const bandFns = new Set();
+  let band = null;
+  function setBand(b) {
+    if (!BANDS.includes(b) || b === band) return;
+    band = b;
+    document.documentElement.dataset.band = b;
+    for (const fn of bandFns) { try { fn(band); } catch (err) { console.error('[kidvo]', err); } }
+  }
+  setBand(new URLSearchParams(location.search).get('band'));
+
   const post = msg => { if (!standalone) window.parent.postMessage(Object.assign({ kidvo: 1 }, msg), '*'); };
   const matches = (p, t) => p === '*' || p === t || (p.endsWith(':*') && t.startsWith(p.slice(0, -1)));
 
@@ -74,9 +90,12 @@
     if (m.kind === 'init') {
       info = { appId: m.appId, winId: m.winId };
       setLang(m.lang);
+      setBand(m.band);
       readyFns.splice(0).forEach(fn => fn(info));
     } else if (m.kind === 'lang') {
       setLang(m.lang);
+    } else if (m.kind === 'band') {
+      setBand(m.band);
     } else if (m.kind === 'event') {
       for (const [pattern, fns] of listeners) {
         if (!matches(pattern, m.topic)) continue;
@@ -120,6 +139,14 @@
     setHotspot(rect) { post({ kind: 'hotspot', rect: rect || null }); },
     setModal(on) { post({ kind: 'modal', on: !!on }); },
     onLang(fn) { langFns.add(fn); try { fn(lang); } catch (err) { console.error('[kidvo]', err); } return () => langFns.delete(fn); },
+    get band() { return band; },
+    onBand(fn) { bandFns.add(fn); try { fn(band); } catch (err) { console.error('[kidvo]', err); } return () => bandFns.delete(fn); },
+    // Takes effect here at once; the desktop's answer only says whether it was remembered for the other games.
+    setBand(b) {
+      if (!BANDS.includes(b)) return Promise.resolve(false);
+      setBand(b);
+      return standalone ? Promise.resolve(true) : call('setBand', b).catch(() => false);
+    },
     t,
     store: standalone
       ? {

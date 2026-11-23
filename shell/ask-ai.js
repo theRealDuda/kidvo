@@ -79,6 +79,16 @@
     .kai-chip { min-height: 44px; padding: 10px 12px; font-size: 13.5px; }
     .kai-flag { min-height: 36px; padding: 8px 12px; font-size: 12.5px; }
   }
+  /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. The AI's name stays a machine's. */
+  [data-band="explorers"] .kai { font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  [data-band="explorers"] .kai-name { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 15px; }
+  [data-band="explorers"] .kai-tag, [data-band="explorers"] .kai-label { font-size: 13px; letter-spacing: 0; text-transform: none; }
+  [data-band="explorers"] .kai-q, [data-band="explorers"] .kai-a p { font-size: 17px; }
+  [data-band="explorers"] .kai-chip { font-size: 16px; padding: 9px 12px; }
+  [data-band="explorers"] .kai-chip .kai-need { font-size: 13px; }
+  [data-band="explorers"] .kai-chip .kai-cost .kai-spark { width: 10px; height: 14px; }
+  [data-band="explorers"] .kai-flag { font-size: 14px; }
+  [data-band="explorers"] .kai-verdict { font-size: 15px; }
   @media (max-height: 480px) { .kai-head { padding: 6px 10px; } .kai-tag { display: none; } .kai-ask { padding: 6px 10px 8px; } .kai-label { display: none; } }
   @media (prefers-reduced-motion: reduce) { .kai.thinking .kai-eye { animation: none; } }
   `;

@@ -50,7 +50,7 @@ Then fill in `apps/my-game/manifest.json`:
 - `name`: up to 32 characters.
 - `description`: the text on your game's card. One or two short sentences a child can read, up to 90 characters.
 - `author.name`: the name children see on your game's window. Letters, digits, spaces and `. _ - '` only.
-- `bands`: `explorers` (7 to 9), `investigators` (10 to 13), or both.
+- `bands`: `explorers` (7 to 9), `investigators` (10 to 13), or both. A game for both reads who is playing from `kidvo.band` (see CONTRIBUTING.md).
 - `skills`: one to three ids from the table above.
 - `color`: your card's colour; `added`: today's date.
 

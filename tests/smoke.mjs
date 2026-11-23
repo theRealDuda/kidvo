@@ -293,6 +293,33 @@ async function run(name) {
     });
   });
 
+  // A child chooses who is playing once. The choice made in Robot Maze above reaches the other open games, a game
+  // opened later starts in that band without asking, and an app without age bands (Vo) cannot change it.
+  await step('the age band chosen in one game reaches every game', async () => {
+    if (await page.evaluate(() => window.kidvoShell.band()) !== 'investigators') throw new Error('the desktop did not remember the band');
+    for (const id of ['secret-keeper', 'nonsense']) {
+      const r = await appFrame(page, id).evaluate(() => ({ band: kidvo.band, attr: document.documentElement.dataset.band }));
+      if (r.band !== 'investigators' || r.attr !== 'investigators') throw new Error(`${id} did not hear it: ${JSON.stringify(r)}`);
+    }
+    const remembered = await appFrame(page, 'pet').evaluate(() => kidvo.setBand('explorers'));
+    if (remembered !== false || await page.evaluate(() => window.kidvoShell.band()) !== 'investigators') throw new Error('Vo changed the age band');
+    const later = await desk.newPage();
+    try {
+      await later.goto(`${SITE}/`);
+      await later.waitForFunction(() => window.kidvoShell, null, { timeout: 5000 });
+      await later.evaluate(() => window.kidvoShell.openApp('nonsense'));
+      await later.frameLocator('iframe[src^="apps/nonsense/"]').locator('body').waitFor({ timeout: 5000 });
+      await later.waitForTimeout(600);
+      const f = appFrame(later, 'nonsense');
+      if (!f) throw new Error('game frame not found');
+      await handshake(f);
+      await f.waitForFunction(() => document.getElementById('overlay').hidden && window.__nonsense.current(), null, { timeout: 3000 })
+        .catch(() => { throw new Error('a game opened later asked who is playing again'); });
+    } finally {
+      await later.close();
+    }
+  });
+
   // With an overlay running (Vo), long text windows must still scroll with the wheel or trackpad.
   // WebKit sent the scroll to the transparent overlay frame while it sat above the windows.
   await step('a text window scrolls with the mouse wheel', async () => {
@@ -372,9 +399,13 @@ async function run(name) {
   }
   await other.close();
 
-  // Phones: every game must fit a 360 px wide screen without sideways scrolling.
+  // Phones: every game must fit a 360 px wide screen without sideways scrolling. An Explorer is playing: their
+  // letters are the biggest, and the games start straight away instead of asking who is playing.
   for (const [label, viewport] of [['phone', { width: 360, height: 640 }], ['phone landscape', { width: 740, height: 360 }]]) {
     const ctx = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
+    await ctx.addInitScript(() => {
+      try { if (!localStorage.getItem('kidvo:shell')) localStorage.setItem('kidvo:shell', JSON.stringify({ band: 'explorers' })); } catch { /* a game frame has no storage */ }
+    });
     await guard(ctx, `${name} ${label}`);
     const phone = await ctx.newPage();
     phone.on('pageerror', err => problems.push(`${name} ${label} page error: ${err.message}`));
@@ -387,12 +418,39 @@ async function run(name) {
       });
       if (over.page > 1 || over.play > 1 || over.bar > 1) throw new Error(`wider than the screen: ${JSON.stringify(over)}`);
     });
+    // An Explorer sees how to play once, before the first round; the next time the game starts at once.
+    if (label === 'phone') await step('an Explorer sees how to play once', async () => {
+      const open = async () => {
+        await phone.evaluate(() => window.kidvoShell.openApp('nonsense'));
+        await phone.waitForTimeout(700);
+        const f = appFrame(phone, 'nonsense');
+        if (!f) throw new Error('game did not load');
+        await handshake(f);
+        return f;
+      };
+      const close = () => phone.evaluate(() => document.querySelectorAll('.win').forEach(w => w.querySelector('[data-act="close"]').click()));
+      let f = await open();
+      await f.waitForFunction(() => !document.getElementById('overlay').hidden && document.querySelector('#overlay .howto'), null, { timeout: 3000 })
+        .catch(() => { throw new Error('no how-to card the first time'); });
+      await f.evaluate(() => document.querySelector('#overlay .btn').click());
+      await f.waitForFunction(() => document.getElementById('overlay').hidden && window.__nonsense.current(), null, { timeout: 3000 })
+        .catch(() => { throw new Error('"Let\'s play!" did not start the round'); });
+      await close();
+      await phone.waitForTimeout(300);
+      f = await open();
+      await f.waitForFunction(() => window.__nonsense.current(), null, { timeout: 3000 })
+        .catch(() => { throw new Error('the second time, the round did not start'); });
+      if (await f.evaluate(() => !!document.querySelector('#overlay .howto'))) throw new Error('the how-to card came back');
+      await close();
+    });
+
     for (const app of windowApps) {
       await step(`${app.id} fits a ${label} screen`, async () => {
         await phone.evaluate(id => window.kidvoShell.openApp(id), app.id);
         await phone.waitForTimeout(700);
         const frame = appFrame(phone, app.id);
         if (!frame) throw new Error('game did not load');
+        if (await frame.evaluate(() => document.documentElement.dataset.band) !== 'explorers') throw new Error('the game is not in the Explorers\' letters, so the test proves less');
         const over = await frame.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         if (over > 1) throw new Error(`the game is ${over}px wider than the screen`);
         const box = await phone.locator(`iframe[src^="apps/${app.id}/"]`).boundingBox();
