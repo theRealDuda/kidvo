@@ -14,7 +14,7 @@
   body { margin: 0 auto; max-width: 820px; padding: 24px 28px 28px; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
   header { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding-bottom: 14px; border-bottom: 3px solid var(--ink); }
   .logo { width: 44px; height: 44px; grid-row: span 2; }
-  .kicker { font: 800 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+  .kicker { font: 800 13px/1 var(--mono); color: var(--soft); }
   h1 { margin: 0; font: 800 28px/1.1 var(--mono); letter-spacing: -.01em; text-wrap: balance; }
   .sub { grid-column: 1 / -1; margin: 6px 0 0; font-size: 16px; }
   .facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -23,15 +23,13 @@
   .facts span:nth-child(3) { background: var(--pink); }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; margin-top: 6px; }
   section { min-width: 0; }
-  h2 { margin: 16px 0 6px; font: 800 13px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  h2 { margin: 16px 0 6px; font: 800 14.5px/1.2 var(--mono); }
   p { margin: 0 0 8px; }
   ol, ul { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 5px; }
   li::marker { font-weight: 800; }
   .games { list-style: none; padding: 0; gap: 6px; }
   .games li { border: 2px solid var(--ink); padding: 6px 9px; }
   .games b { font-family: var(--mono); }
-  .games .ex { background: var(--mint); }
-  .games .inv { background: var(--pink); }
   .games .all { background: var(--sky); }
   .games small { display: block; color: var(--soft); font: 700 11px/1.4 var(--mono); }
   .plan { list-style: none; padding: 0; gap: 0; border: 2px solid var(--ink); }
@@ -43,6 +41,8 @@
   .mode i { font-style: normal; font-weight: 700; }
   .mode.ex { background: var(--mint); }
   .mode.inv { background: var(--pink); }
+  .mode.read { background: var(--sky); }
+  .mode.read b { display: inline; }
   .talk { margin-top: 12px; border: 3px solid var(--ink); padding: 4px 16px 10px; box-shadow: 5px 5px 0 var(--ink); }
   .talk ol { gap: 5px; }
   .talk li { font-size: 15px; }
@@ -59,15 +59,18 @@
   @media print {
     html { background: none; }
     body { max-width: none; padding: 0; font-size: 10px; line-height: 1.32; }
-    header { padding-bottom: 10px; }
+    header { padding-bottom: 8px; }
     h1 { font-size: 21px; }
     .sub { font-size: 13px; }
-    h2 { margin-top: 9px; }
+    h2 { margin-top: 7px; font-size: 12px; }
+    .kicker { font-size: 11px; }
     ol, ul { gap: 3px; margin-bottom: 6px; }
     p { margin-bottom: 6px; }
-    .games li { padding: 4px 8px; }
+    .games { gap: 4px; }
+    .games li { padding: 3px 8px; }
     .plan li { padding: 5px 9px; }
     .mode { padding: 5px 9px; margin-bottom: 6px; }
+    .mode b { font-size: 11.5px; }
     .talk { box-shadow: none; margin-top: 10px; }
     .talk li { font-size: 11.5px; }
     .row { margin-top: 10px; }
@@ -89,15 +92,16 @@
   <section>
     <h2>Alege un joc</h2>
     <ul class="games">
-      <li class="all"><b>Labirintul robotului</b><br>AI-ul ajutor e „100% sigur”. Unele indicii sunt greșite.<small>kidvo.eu/#maze · 7–13 ani · bun pentru început</small></li>
-      <li class="ex"><b>Păstrătorul de secrete</b><br>Un AI prietenos pune întrebări. La care e bine să răspunzi?<small>kidvo.eu/#secret-keeper · mai ales 7–9 ani · confidențialitate</small></li>
-      <li class="inv"><b>Sigur, dar greșit</b><br>Răspunsuri adevărate și inventate, toate la fel de sigure.<small>kidvo.eu/#nonsense · mai ales 10–13 ani · fapte</small></li>
-      <li class="inv"><b>Antrenează Sortatorul</b><br>Înveți un mic AI. Exemplele părtinitoare îl fac părtinitor.<small>kidvo.eu/#sorter · mai ales 10–13 ani · părtinire</small></li>
+      <li class="all"><b>Labirintul robotului</b><br>AI-ul ajutor e „100% sigur”. Unele indicii sunt greșite.<small>kidvo.eu/#maze · bun pentru început</small></li>
+      <li class="all"><b>Păstrătorul de secrete</b><br>Un AI prietenos pune întrebări. La care e bine să răspunzi?<small>kidvo.eu/#secret-keeper · confidențialitate</small></li>
+      <li class="all"><b>Sigur, dar greșit</b><br>Răspunsuri adevărate și inventate, toate la fel de sigure.<small>kidvo.eu/#nonsense · fapte</small></li>
+      <li class="all"><b>Antrenează Sortatorul</b><br>Înveți un mic AI. Exemplele părtinitoare îl fac părtinitor.<small>kidvo.eu/#sorter · părtinire</small></li>
     </ul>
 
     <h2>Cum o desfășori</h2>
     <div class="mode ex"><b>Un proiector, toată clasa</b>Tu dai click, clasa decide. Înainte de fiecare click, votați: avem încredere în AI sau verificăm? Un copil spune de ce.</div>
     <div class="mode inv"><b>În perechi, pe dispozitive</b>Orice dispozitiv cu browser. Un copil joacă, celălalt verifică și aprobă fiecare mutare. Schimbă rolurile la fiecare rundă.</div>
+    <div class="mode read"><b>Citire cu voce tare.</b> Pentru cei care încă învață să citească, butonul cu difuzor de sus citește jocurile (doar cu o voce din dispozitiv).</div>
   </section>
 
   <section>
@@ -116,7 +120,7 @@
       <li>Fiecare joc are un ghid de o pagină pentru părinți („Pentru adulți” pe cardul lui), de tipărit și trimis acasă.</li>
     </ul>
 
-    <div class="mode"><b>Două moduri</b>Majoritatea jocurilor întreabă „Cine se joacă?”. Alege <i>Explorator</i> pentru 7–9 ani sau <i>Cercetător</i> pentru 10–13 ani, unde greșelile AI-ului se văd mai greu.</div>
+    <div class="mode"><b>Două moduri, alese o singură dată</b>Primul joc întreabă „Cine se joacă?”: <i>Explorator</i> pentru 7–9 ani (litere mai mari, mai puțin text, un scurt ecran „Cum se joacă”) sau <i>Cercetător</i> pentru 10–13 ani (greșeli mai greu de văzut, un caz real la final). Toate jocurile urmează alegerea. Se schimbă jos, în orice joc; pe un dispozitiv comun, verific-o înainte de oră.</div>
   </section>
 </div>
 

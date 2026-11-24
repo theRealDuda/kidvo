@@ -14,7 +14,7 @@
   body { margin: 0 auto; max-width: 820px; padding: 24px 28px 28px; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
   header { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding-bottom: 14px; border-bottom: 3px solid var(--ink); }
   .logo { width: 44px; height: 44px; grid-row: span 2; }
-  .kicker { font: 800 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+  .kicker { font: 800 13px/1 var(--mono); color: var(--soft); }
   h1 { margin: 0; font: 800 28px/1.1 var(--mono); letter-spacing: -.01em; text-wrap: balance; }
   .sub { grid-column: 1 / -1; margin: 6px 0 0; font-size: 16px; }
   .facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -23,15 +23,13 @@
   .facts span:nth-child(3) { background: var(--pink); }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; margin-top: 6px; }
   section { min-width: 0; }
-  h2 { margin: 16px 0 6px; font: 800 13px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  h2 { margin: 16px 0 6px; font: 800 14.5px/1.2 var(--mono); }
   p { margin: 0 0 8px; }
   ol, ul { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 5px; }
   li::marker { font-weight: 800; }
   .games { list-style: none; padding: 0; gap: 6px; }
   .games li { border: 2px solid var(--ink); padding: 6px 9px; }
   .games b { font-family: var(--mono); }
-  .games .ex { background: var(--mint); }
-  .games .inv { background: var(--pink); }
   .games .all { background: var(--sky); }
   .games small { display: block; color: var(--soft); font: 700 11px/1.4 var(--mono); }
   .plan { list-style: none; padding: 0; gap: 0; border: 2px solid var(--ink); }
@@ -43,6 +41,8 @@
   .mode i { font-style: normal; font-weight: 700; }
   .mode.ex { background: var(--mint); }
   .mode.inv { background: var(--pink); }
+  .mode.read { background: var(--sky); }
+  .mode.read b { display: inline; }
   .talk { margin-top: 12px; border: 3px solid var(--ink); padding: 4px 16px 10px; box-shadow: 5px 5px 0 var(--ink); }
   .talk ol { gap: 5px; }
   .talk li { font-size: 15px; }
@@ -59,15 +59,18 @@
   @media print {
     html { background: none; }
     body { max-width: none; padding: 0; font-size: 10px; line-height: 1.32; }
-    header { padding-bottom: 10px; }
+    header { padding-bottom: 8px; }
     h1 { font-size: 21px; }
     .sub { font-size: 13px; }
-    h2 { margin-top: 9px; }
+    h2 { margin-top: 7px; font-size: 12px; }
+    .kicker { font-size: 11px; }
     ol, ul { gap: 3px; margin-bottom: 6px; }
     p { margin-bottom: 6px; }
-    .games li { padding: 4px 8px; }
+    .games { gap: 4px; }
+    .games li { padding: 3px 8px; }
     .plan li { padding: 5px 9px; }
     .mode { padding: 5px 9px; margin-bottom: 6px; }
+    .mode b { font-size: 11.5px; }
     .talk { box-shadow: none; margin-top: 10px; }
     .talk li { font-size: 11.5px; }
     .row { margin-top: 10px; }
@@ -89,15 +92,16 @@
   <section>
     <h2>Pick one game</h2>
     <ul class="games">
-      <li class="all"><b>Robot Maze</b><br>The AI helper is "100% sure". Some hints are wrong.<small>kidvo.eu/#maze · ages 7–13 · a good first game</small></li>
-      <li class="ex"><b>Secret Keeper</b><br>A friendly AI asks questions. Which ones do you answer?<small>kidvo.eu/#secret-keeper · best at 7–9 · privacy</small></li>
-      <li class="inv"><b>Confident Nonsense</b><br>True and made-up answers, all equally sure.<small>kidvo.eu/#nonsense · best at 10–13 · facts</small></li>
-      <li class="inv"><b>Train the Sorter</b><br>Teach a tiny AI. One-sided examples make it biased.<small>kidvo.eu/#sorter · best at 10–13 · bias</small></li>
+      <li class="all"><b>Robot Maze</b><br>The AI helper is "100% sure". Some hints are wrong.<small>kidvo.eu/#maze · a good first game</small></li>
+      <li class="all"><b>Secret Keeper</b><br>A friendly AI asks questions. Which ones do you answer?<small>kidvo.eu/#secret-keeper · privacy</small></li>
+      <li class="all"><b>Confident Nonsense</b><br>True and made-up answers, all equally sure.<small>kidvo.eu/#nonsense · facts</small></li>
+      <li class="all"><b>Train the Sorter</b><br>Teach a tiny AI. One-sided examples make it biased.<small>kidvo.eu/#sorter · bias</small></li>
     </ul>
 
     <h2>How to run it</h2>
     <div class="mode ex"><b>One projector, the whole class</b>You click, the class decides. Before each click, hands up: trust the AI, or check first? Ask a child why.</div>
     <div class="mode inv"><b>In pairs, on devices</b>Any device with a browser. One child plays, the other checks and must agree to each move. Swap every round.</div>
+    <div class="mode read"><b>Read aloud.</b> For children still learning to read, the speaker button at the top reads the games aloud (only with a voice built into the device).</div>
   </section>
 
   <section>
@@ -116,7 +120,7 @@
       <li>Every game has a one-page parents' guide ("For grown-ups" on its card) to print and send home.</li>
     </ul>
 
-    <div class="mode"><b>Two modes</b>Most games ask "Who is playing?". Pick <i>Explorer</i> for ages 7–9 or <i>Investigator</i> for 10–13, where the AI's mistakes are harder to spot.</div>
+    <div class="mode"><b>Two modes, chosen once</b>The first game asks "Who is playing?": <i>Explorer</i> for ages 7–9 (bigger letters, fewer words, a short how-to card) or <i>Investigator</i> for 10–13 (harder mistakes, a real case at the end). Every game follows. Change it at the bottom of any game; on a shared device, check it before class.</div>
   </section>
 </div>
 
