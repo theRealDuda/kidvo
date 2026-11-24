@@ -3,7 +3,14 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { APP_CSP, GUIDE_CSP, findUrls, unmask, htmlProblems, svgProblems } from '../scripts/lib.mjs';
+import { APP_CSP, GUIDE_CSP, FORBIDDEN, findUrls, unmask, htmlProblems, svgProblems } from '../scripts/lib.mjs';
+
+// Read aloud goes through kidvo.speak, which uses voices on the device only; a game's own speech could pick a
+// network voice and send its text to a speech service, which the content policy cannot stop.
+const forbidden = code => FORBIDDEN.filter(([re]) => re.test(code));
+assert.ok(forbidden('speechSynthesis.speak(u)').length, 'a game speaking by itself');
+assert.ok(forbidden('new SpeechSynthesisUtterance(text)').length, 'a game building its own utterance');
+assert.equal(forbidden('kidvo.speak(text)').length, 0, 'kidvo.speak is the way');
 
 const meta = csp => `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
 const page = (between, csp = APP_CSP) => `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n${between}${meta(csp)}\n<title>x</title>`;

@@ -51,15 +51,39 @@
   .btn.alt { background: var(--paper); }
   .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
   .btn:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
-  .band { display: grid; gap: 2px; text-align: left; width: 100%; }
-  .band small { font: 600 12px var(--sans); }
+  /* The age picker comes before anyone knows who is playing, so a 7-year-old must be able to read it too. */
+  .band { display: grid; gap: 2px; text-align: left; width: 100%; font-size: 16px; }
+  .band small { font: 600 14px var(--sans); }
   .stat { display: flex; justify-content: space-between; font: 700 13px var(--mono); font-variant-numeric: tabular-nums; }
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
-  .earned span { font: 800 11px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 5px 7px; border: 2px solid var(--ink); background: var(--trail); }
+  .earned span { font: 800 12px/1 var(--mono); padding: 5px 7px; border: 2px solid var(--ink); background: var(--trail); }
   .note { font-size: 13px; color: var(--soft); }
   .feedback { font-weight: 700; }
 
   .ask-toggle { display: none; }
+
+  /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. Headings keep the look. */
+  [data-band="explorers"] header { font-size: 15px; }
+  [data-band="explorers"] header b { font-size: 18px; }
+  [data-band="explorers"] .goal { display: block; font-size: 15px; }
+  [data-band="explorers"] #steps { white-space: nowrap; }
+  [data-band="explorers"] .card { font: 17px/1.45 var(--sans); }
+  [data-band="explorers"] .card h2 { font-size: 21px; }
+  [data-band="explorers"] .note { font-size: 16px; }
+  [data-band="explorers"] .stat { font: 600 16px var(--sans); }
+  [data-band="explorers"] .btn { font: 800 16px/1.2 var(--sans); }
+  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); }
+  [data-band="explorers"] .ask-toggle { font: 800 16px var(--sans); }
+  /* The running totals are for older players; Explorers see their badges on each level's card. */
+  [data-band="explorers"] #totals { display: none; }
+  [data-band="explorers"] footer .links { margin-left: auto; }
+  /* How to play (Explorers, once): a picture and one short line per rule. */
+  .howto { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .howto li { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; font: 600 17px/1.35 var(--sans); }
+  .howto .pic { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--ink); }
+  .howto .pic > svg { width: 44px; height: 44px; }
+  .howto .scene { position: relative; width: 48px; height: 48px; }
+  .howto .scene svg { position: absolute; }
 
   /* Phones (portrait): the maze gets the whole screen; ORACLE slides up as a drawer. */
   @media (max-width: 620px) {
@@ -325,6 +349,18 @@
   const cv = $('c');
   const ctx = cv.getContext('2d');
 
+  /* ---------------- pixel art ---------------- */
+  // Row strings as for kidvo.sprite (sdk.js): one letter per pixel. K ink, W white, R coral, Y yellow, and this game's own.
+  const PIXELS = { K: '#191833', W: '#ffffff', R: '#ff6b5b', Y: '#ffd23f', r: '#d94a3d', L: '#a9b2f5', l: '#7f8ae0', P: '#ff9a3c' };
+  // The robot. Rows 4 and 5 are its visor: the eyes look the way it last moved (robotRows).
+  const ROBOT = ['....Y....', '....K....', '.KKKKKKK.', 'KRRRRRRRK', 'KRWWWWWRK', 'KRWKWKWRK', 'KRRRRRRRK', 'KrrrrrrrK', '.KKKKKKK.', '.KK...KK.'];
+  const STAR = ['.....K.....', '....KYK....', '....KYK....', 'KKKKYYYKKKK', 'KYYYYYYYYYK', '.KYYYYYYYK.', '..KYYYYYK..', '..KYYYYYK..', '.KYYYKYYYK.', '.KYYK.KYYK.', '.KKK...KKK.'];
+  const DOTS = ['P..P..P', '.......', '.......', 'P......', '.......', '.......', 'P......'];
+  const SPARK = ['...KKKK', '..KYYYK', '.KYYYK.', 'KYYYKKK', 'KKKYYYK', '..KYYK.', '.KYYK..', 'KYYK...', 'KKK....'];
+  // ORACLE-3000 is a crystal ball with one eye. The eye is its LED: it blinks while ORACLE thinks.
+  const ORACLE = ['...KKKKKK...', '..KLLLLLLK..', '.KLLWLLLLLK.', '.KLLKKKKLLK.', 'KLLKWWWWKLLK', 'KLLKWRRWKLLK', 'KLLKWRRWKLLK', 'KLLKWWWWKLLK', '.KllKKKKllK.', '..KllllllK..', '..KKKKKKKK..', '.KYYYYYYYYK.'];
+  const pixels = (rows, scale) => kidvo.sprite(rows, { colors: PIXELS, led: rows === ORACLE ? 'R' : null, scale });
+
   let band = null, B = null;
   let level = 1, me, from = null, steps = 0, par, sparks = SPARKS, trail, shownPath = null, aiSolved = false, done = false;
   // bests: best level per band (at most LEVELS). best is kept for progress saved before bands had their own.
@@ -380,19 +416,10 @@
       ctx.fillStyle = '#ff9a3c';
       for (const p of shownPath) ctx.fillRect(o + p.x * cell + cell * .38, o + p.y * cell + cell * .38, cell * .24, cell * .24);
     }
-    const gx = o + (N - 1) * cell, gy = o;
-    ctx.fillStyle = '#ffd23f';
-    ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const r = (i % 2 ? .2 : .42) * cell, a = -Math.PI / 2 + i * Math.PI / 5;
-      ctx.lineTo(gx + cell / 2 + r * Math.cos(a), gy + cell / 2 + r * Math.sin(a));
-    }
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#191833'; ctx.lineWidth = Math.max(1, cell / 22); ctx.stroke();
-    ctx.fillStyle = '#ff6b5b';
-    ctx.fillRect(o + me.x * cell + cell * .22, o + me.y * cell + cell * .22, cell * .56, cell * .56);
-    ctx.fillStyle = '#191833';
     const w = Math.max(2, Math.round(cell / 7));
+    paint(STAR, o + (N - 1) * cell, o, cell, w);
+    paint(robotRows(), o + me.x * cell, o + me.y * cell, cell, w);
+    ctx.fillStyle = '#191833';
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
       const v = cells[y * N + x], px = o + x * cell, py = o + y * cell;
       if (!(v & 1)) ctx.fillRect(px - w / 2, py - w / 2, cell + w, w);
@@ -402,9 +429,36 @@
     }
   }
 
+  // A sprite in the middle of a maze cell, inside its walls. Each sprite pixel is a whole number of canvas pixels
+  // where there is room for that, so the pixels stay even and sharp.
+  function paint(rows, x, y, cell, wall) {
+    const room = cell - wall - 2;
+    let s = room / Math.max(rows.length, rows[0].length);
+    if (s >= 2) s = Math.floor(s);
+    const ox = x + (cell - rows[0].length * s) / 2, oy = y + (cell - rows.length * s) / 2;
+    rows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        if (!PIXELS[row[i]]) continue;
+        const x0 = Math.round(ox + i * s), y0 = Math.round(oy + j * s);
+        ctx.fillStyle = PIXELS[row[i]];
+        ctx.fillRect(x0, y0, Math.round(ox + (i + 1) * s) - x0, Math.round(oy + (j + 1) * s) - y0);
+      }
+    });
+  }
+
+  // The robot looks the way it last moved (straight ahead before its first step).
+  function robotRows() {
+    const dx = from ? me.x - from.x : 0, up = !!from && me.y < from.y;
+    const rows = ROBOT.slice();
+    rows[up ? 4 : 5] = dx > 0 ? 'KRWWKWKRK' : dx < 0 ? 'KRKWKWWRK' : 'KRWKWKWRK';
+    rows[up ? 5 : 4] = 'KRWWWWWRK';
+    return rows;
+  }
+
   function move(d) {
     // While ORACLE thinks, the robot waits: finishing in that pause would beat the answer it already paid for.
-    if (done || !band || oracle.isBusy()) return;
+    // It also waits while a card is open (who is playing, how to play), so arrow keys do not move it behind the card.
+    if (done || !band || oracle.isBusy() || !$('overlay').hidden) return;
     if (!open(me, d)) { cv.classList.remove('bump'); void cv.offsetWidth; cv.classList.add('bump'); return; }
     from = me;
     me = step(me, d);
@@ -458,7 +512,7 @@
     tag: t('ai_tag'), ask: t('ai_ask'), notRight: t('ai_notRight'), caught: t('ai_caught'), fine: t('ai_fine'),
     other: t('ai_other'), sparksLeft: v => t('ai_sparksLeft', v), costs: v => t('ai_costs', v), notEnough: t('ai_notEnough')
   });
-  const oracle = kidvoAI.create($('oracle'), { name: 'ORACLE-3000', sparks: SPARKS, questions, text: aiText(), onAnswer: () => renderToggle() });
+  const oracle = kidvoAI.create($('oracle'), { name: 'ORACLE-3000', face: pixels(ORACLE), sparks: SPARKS, questions, text: aiText(), onAnswer: () => renderToggle() });
 
   // Phones: ORACLE lives in a drawer that the child opens and closes.
   function renderToggle() {
@@ -531,7 +585,9 @@
         } else {
           text = t(answered ? 'fb_right_said_right' : 'fb_right_said_wrong');
         }
-        card.append(el('p', text), next);
+        const fb = el('p', text);
+        fb.dataset.say = '';
+        card.append(fb, next);
       }
       return card;
     };
@@ -591,6 +647,8 @@
     $('overlay').replaceChildren(view());
     $('overlay').hidden = false;
     focusCard();
+    // Read aloud: a new card whole; after an answer, only the feedback (marked data-say).
+    kidvo.speak($('overlay').querySelector('.card'), { fresh: true });
   }
   // Focus the card itself, not its first button: a highlighted answer nudges the child. Tab reaches the buttons.
   function focusCard() { const c = $('overlay').querySelector('.card'); if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); } }
@@ -623,13 +681,15 @@
         btn.type = 'button';
         btn.dataset.band = key;
         btn.append(el('span', t('band_' + key)), el('small', t('ages', { ages: BANDS[key].ages })));
-        btn.addEventListener('click', () => setBand(key, true));
+        // Every game hears the choice and the desktop remembers it, so the next game does not ask again.
+        btn.addEventListener('click', () => { setBand(key, true); kidvo.setBand(key); });
         card.append(btn);
       }
       return card;
     });
   }
 
+  // The stored band is the one the saved level belongs to: a different band starts again at level 1.
   function setBand(key, fresh) {
     band = key; B = BANDS[key];
     kidvo.store.set('band', key).catch(() => {});
@@ -637,6 +697,36 @@
     start(level);
     oracle.say(() => tb('greet'));
     renderFooter();
+    if (band === 'explorers' && !howtoSeen) showOverlay(howtoView);
+  }
+
+  /* ---------------- how to play: Explorers see it once, before their first maze ---------------- */
+  // Pictures first, one short line each. Kept in this game's storage; "start over" shows it again.
+  const PIC = {
+    star: () => scene([pixels(ROBOT, 2), 1, 28], [pixels(DOTS, 2), 9, 10], [pixels(STAR, 2), 26, 0]),
+    oracle: () => scene([pixels(ORACLE, 3), 0, 12], [pixels(SPARK, 2), 34, 0]),
+    catch: '<svg viewBox="0 0 48 48"><rect x="3" y="8" width="34" height="18" fill="#2e3250" stroke="#191833" stroke-width="3"/><rect x="9" y="15" width="20" height="4" fill="#d9ffe6"/><circle cx="34" cy="34" r="11" fill="#ff8fab" stroke="#191833" stroke-width="3"/><path d="M29 29l10 10M39 29l-10 10" stroke="#191833" stroke-width="3" stroke-linecap="round"/></svg>'
+  };
+  // A 48x48 picture made of sprites: [sprite, left, top].
+  const scene = (...parts) => {
+    const d = el('span', null, 'scene');
+    for (const [art, x, y] of parts) { art.style.left = x + 'px'; art.style.top = y + 'px'; d.append(art); }
+    return d;
+  };
+  let howtoSeen = false;
+  function howtoView() {
+    const card = el('div', null, 'card');
+    const list = el('ol', null, 'howto');
+    for (const [pic, text] of [['star', t('howto1')], ['oracle', t('howto2')], ['catch', t('howto3', { button: t('ai_notRight') })]]) {
+      const p = el('span', null, 'pic'); p.setAttribute('aria-hidden', 'true');
+      if (typeof PIC[pic] === 'string') p.innerHTML = PIC[pic]; else p.append(PIC[pic]());
+      const li = el('li'); li.append(p, el('span', text)); list.append(li);
+    }
+    const go = el('button', t('howtoGo'), 'btn');
+    go.type = 'button';
+    go.addEventListener('click', () => { howtoSeen = true; kidvo.store.set('howto', true).catch(() => {}); closeOverlay(); cv.focus(); });
+    card.append(el('h2', t('howto')), list, go);
+    return card;
   }
 
   /* ---------------- language ---------------- */
@@ -679,8 +769,9 @@
     }
     clearTimeout(resetTimer); resetArmed = false;
     progress = newProgress();
-    band = null; B = null; level = 1; seenWrong = false;
+    band = null; B = null; level = 1; seenWrong = false; howtoSeen = false;
     save({ level: 1, band: null });
+    kidvo.store.remove('howto').catch(() => {});
     oracle.reset({ sparks: SPARKS });
     renderFooter();
     pickBand();
@@ -695,7 +786,11 @@
   };
 
   kidvo.onLang(applyLanguage);
-  pickBand();
+  // The desktop may have said who is playing before this script ran: then the card would only flash (and be read).
+  if (!kidvo.band) pickBand();
+  // Who is playing comes from the desktop, which remembers the last choice made in any game.
+  let loaded = false;
+  kidvo.onBand(b => { if (loaded && BANDS[b] && b !== band) setBand(b, true); });
   kidvo.ready(async () => {
     try {
       progress = Object.assign(progress, (await kidvo.store.get('progress')) || {});
@@ -708,8 +803,16 @@
       for (const k of Object.keys(progress.bests)) progress.bests[k] = Math.min(progress.bests[k], LEVELS);
       renderFooter();
       const savedLevel = await kidvo.store.get('level');
-      if (saved && BANDS[saved]) { level = Math.min(Number(savedLevel) || 1, LEVELS); setBand(saved, false); }
-    } catch { /* first visit: keep the picker */ }
+      howtoSeen = !!(await kidvo.store.get('howto'));
+      // A band chosen before the desktop remembered it is handed to the desktop.
+      const b = BANDS[kidvo.band] ? kidvo.band : BANDS[saved] ? saved : null;
+      if (b) {
+        level = Math.min(Number(savedLevel) || 1, LEVELS);
+        setBand(b, !!saved && saved !== b);
+        if (!kidvo.band) kidvo.setBand(b);
+      }
+    } catch { if (!band) pickBand(); /* storage failed: ask, rather than show nothing */ }
+    loaded = true;
   });
 })();
 </script>

@@ -14,7 +14,7 @@
   body { margin: 0 auto; max-width: 820px; padding: 24px 28px 28px; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
   header { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding-bottom: 14px; border-bottom: 3px solid var(--ink); }
   .logo { width: 44px; height: 44px; grid-row: span 2; }
-  .kicker { font: 800 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+  .kicker { font: 800 13px/1 var(--mono); color: var(--soft); }
   h1 { margin: 0; font: 800 28px/1.1 var(--mono); letter-spacing: -.01em; text-wrap: balance; }
   .sub { grid-column: 1 / -1; margin: 6px 0 0; font-size: 16px; }
   .facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -23,7 +23,7 @@
   .facts span:nth-child(3) { background: var(--pink); }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; margin-top: 6px; }
   section { min-width: 0; }
-  h2 { margin: 16px 0 6px; font: 800 13px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  h2 { margin: 16px 0 6px; font: 800 14.5px/1.2 var(--mono); }
   p { margin: 0 0 8px; }
   ol, ul { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 5px; }
   li::marker { font-weight: 800; }
@@ -56,11 +56,11 @@
   <div class="kicker">kidvo · Útmutató szülőknek és tanároknak</div>
   <h1>Tanítsd a Válogatót</h1>
   <p class="sub">A gyerek példákkal tanít egy apró mesterséges intelligenciát, és maga jön rá, hogyan lesz az egyoldalú példákból elfogult AI.</p>
-  <div class="facts"><span>7–13 éveseknek</span><span>10 perc</span><span>Teljesen a böngészőben fut</span></div>
+  <div class="facts"><span>7–13 éveseknek</span><span>10 perc</span><span>Teljesen a böngészőben fut</span><span>Felolvasható</span></div>
 </header>
 <div class="cols">
-  <section><h2>Mit csinál a gyerek</h2><ol><li>Nyolc gyümölcsről eldönti, hogy „alma” vagy „nem alma”, és ezzel tanítja SORT-1-et, az apró AI-t.</li><li>Figyeli, ahogy SORT-1 új gyümölcsöket válogat, és minden alkalommal eldönti, igaza van-e.</li><li>Rájön, hogy SORT-1 szerint a zöld és a sárga alma nem alma, és kiválasztja, miért.</li><li>Változatosabb példákkal újra tanítja SORT-1-et, és látja, hogy jobban teljesít.</li><li>Extra kör, ha van kedve: 16 gyümölcsből 8-at választ ki, és ezekkel tanítja SORT-1-et elölről. Ha almákat és almára csak hasonlító gyümölcsöket is választ, 6/6 lesz az eredmény, és jár a Kurátor jelvény.</li></ol><h2>Mit tanít</h2><ul><li><b>Az AI példákból tanul.</b> SORT-1 csak azt tudja, amit megmutattak neki.</li><li><b>Az egyoldalú példákból egyoldalú AI lesz.</b> Az első példák között csak piros alma van, így SORT-1 úgy dönt, hogy az alma piros. Ez az elfogultság, és a gyerek előbb fedezi fel, mint hogy bárki elmagyarázná.</li></ul></section>
-  <section><h2>Hogyan működik SORT-1</h2><p>SORT-1 egy valódi, nagyon egyszerű gépi tanulási módszert használ (legközelebbi szomszéd). Három dolgot néz: színt, formát és méretet, és annak a példának a címkéjét másolja, amelyik a leginkább hasonlít. Mindig nagyon magabiztos, akkor is, ha téved. Minden próbánál egy „Amire SORT-1 emlékszik” sáv mutatja az összes példát a gyerek címkéivel, és kiemeli azt, amelyiket SORT-1 lemásolta, így a gyerek látja, miért tippelt úgy.</p><h2>Mindkét korosztálynak</h2><p>A kisebbek élvezik a tanítást és a meglepetést. A nagyobbak tovább mehetnek: miért gondolta SORT-1 a cseresznyéről is, hogy alma? Melyik példák javították ki?</p></section>
+  <section><h2>Mit csinál a gyerek</h2><ol><li>Nyolc gyümölcsről eldönti, hogy „alma” vagy „nem alma”, és ezzel tanítja SORT-1-et, az apró AI-t.</li><li>Figyeli, ahogy SORT-1 új gyümölcsöket válogat, és minden alkalommal eldönti, igaza van-e.</li><li>Rájön, hogy SORT-1 szerint a zöld és a sárga alma nem alma, és kiválasztja, miért.</li><li>Változatosabb példákkal újra tanítja SORT-1-et, és látja, hogy jobban teljesít.</li><li>16 gyümölcsből 8-at választ ki, és ezekkel tanítja SORT-1-et elölről: a Nyomozóknál ez az utolsó lépés, a Felfedezőknél extra kör, ha van kedve. Ha almákat és almára csak hasonlító gyümölcsöket is választ, 6/6 lesz az eredmény, és jár a Kurátor jelvény.</li></ol><h2>Mit tanít</h2><ul><li><b>Az AI példákból tanul.</b> SORT-1 csak azt tudja, amit megmutattak neki.</li><li><b>Az egyoldalú példákból egyoldalú AI lesz.</b> Az első példák között csak piros alma van, így SORT-1 úgy dönt, hogy az alma piros. Ez az elfogultság, és a gyerek előbb fedezi fel, mint hogy bárki elmagyarázná.</li></ul></section>
+  <section><h2>Hogyan működik SORT-1</h2><p>SORT-1 egy valódi, nagyon egyszerű gépi tanulási módszert használ (legközelebbi szomszéd). Három dolgot néz: színt, formát és méretet, és annak a példának a címkéjét másolja, amelyik a leginkább hasonlít. Mindig nagyon magabiztos, akkor is, ha téved. Minden próbánál egy „Amire SORT-1 emlékszik” sáv mutatja az összes példát a gyerek címkéivel, és kiemeli azt, amelyiket SORT-1 lemásolta, így a gyerek látja, miért tippelt úgy.</p><h2>Két mód</h2><div class="mode ex"><b>Felfedező, 7–9 éveseknek</b>Rövidebb mondatok, és SORT-1 százalék helyett azt mondja: „nagyon biztos vagyok”. A „miért hibázott?” kérdésre három válasz van, mindegyik képpel.</div><div class="mode inv"><b>Nyomozó, 10–13 éveseknek</b>SORT-1 százalékban mondja meg, mennyire biztos, és a „miért” kérdésre négy válasz van. A végén a gyerek egy valódi esetre alkalmazza a tanultakat (egy AI, amely egyoldalú fotókból tanul arcokat felismerni), utolsó lépésként pedig maga választja ki SORT-1 példáit.</div></section>
 </div>
 <div class="talk">
   <h2>Beszélgessetek róla utána</h2>

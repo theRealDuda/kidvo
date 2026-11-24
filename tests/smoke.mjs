@@ -261,6 +261,19 @@ async function run(name) {
     if (bad) throw new Error(bad);
   });
 
+  // A library check shows the fact under the answer buttons, so they stay where the child's finger is.
+  await step('nonsense: checking the library leaves the answer buttons where they were', async () => {
+    const moved = await appFrame(page, 'nonsense').evaluate(async () => {
+      window.__nonsense.play('investigators');
+      await new Promise(r => setTimeout(r, 900));
+      const top = () => document.querySelector('#stage .btn.true').getBoundingClientRect().top;
+      const before = top();
+      document.querySelector('#stage .btn.check').click();
+      return top() - before;
+    });
+    if (Math.abs(moved) > 1) throw new Error(`the buttons moved ${moved}px`);
+  });
+
   // Robot Maze is a run of 8 levels that ends in a finale card. The test walks the shortest route
   // through every Investigator level, then plays the run again.
   await step('Robot Maze runs to the finale', async () => {
@@ -291,6 +304,102 @@ async function run(name) {
       document.querySelector('#overlay [data-act="again"]').click();
       if (m.level() !== 1 || !document.getElementById('overlay').hidden) throw new Error('"Play the run again" did not start level 1');
     });
+  });
+
+  // A child chooses who is playing once. The choice made in Robot Maze above reaches the other open games, a game
+  // opened later starts in that band without asking, and an app without age bands (Vo) cannot change it.
+  await step('the age band chosen in one game reaches every game', async () => {
+    // The choice travels by message, and Robot Maze's run above sends it in one burst with its other messages:
+    // WebKit can still be delivering them when that step ends, so wait for it rather than read it at once.
+    await page.waitForFunction(() => window.kidvoShell.band() === 'investigators', null, { timeout: 3000 })
+      .catch(() => { throw new Error('the desktop did not remember the band'); });
+    for (const id of ['secret-keeper', 'nonsense', 'sorter']) {
+      await appFrame(page, id).waitForFunction(() => kidvo.band === 'investigators' && document.documentElement.dataset.band === 'investigators', null, { timeout: 3000 })
+        .catch(() => { throw new Error(`${id} did not hear it`); });
+    }
+    // Investigators hear SORT-1's confidence in per cent (Explorers hear "very sure", checked on the phone below).
+    const said = await appFrame(page, 'sorter').evaluate(() => { window.__sorter.learn(); return window.__sorter.says('greenapple'); });
+    if (!/\d+\s*%/.test(said)) throw new Error(`Investigators' SORT-1 gave no percentage: "${said}"`);
+    const remembered = await appFrame(page, 'pet').evaluate(() => kidvo.setBand('explorers'));
+    if (remembered !== false || await page.evaluate(() => window.kidvoShell.band()) !== 'investigators') throw new Error('Vo changed the age band');
+    const later = await desk.newPage();
+    try {
+      await later.goto(`${SITE}/`);
+      await later.waitForFunction(() => window.kidvoShell, null, { timeout: 5000 });
+      await later.evaluate(() => window.kidvoShell.openApp('nonsense'));
+      await later.frameLocator('iframe[src^="apps/nonsense/"]').locator('body').waitFor({ timeout: 5000 });
+      await later.waitForTimeout(600);
+      const f = appFrame(later, 'nonsense');
+      if (!f) throw new Error('game frame not found');
+      await handshake(f);
+      await f.waitForFunction(() => document.getElementById('overlay').hidden && window.__nonsense.current(), null, { timeout: 3000 })
+        .catch(() => { throw new Error('a game opened later asked who is playing again'); });
+    } finally {
+      await later.close();
+    }
+  });
+
+  // Read aloud uses only a voice that runs on the device. A stand-in speech engine offers an English voice on the
+  // device and a Hungarian one that is not: English gets the switch and a game is read with the device's voice;
+  // Hungarian gets no switch, and nothing is read with the network voice.
+  await step('read aloud speaks with a voice on the device only', async () => {
+    const sp = await desk.newPage();
+    sp.on('pageerror', err => problems.push(`${name} read-aloud page error: ${err.message}`));
+    try {
+      await sp.addInitScript(() => {
+        if (window !== window.top) return;
+        const voices = [{ name: 'Device', lang: 'en-US', localService: true, default: true }, { name: 'Network', lang: 'hu-HU', localService: false, default: false }];
+        window.__spoken = [];
+        class Utterance { constructor(text) { this.text = text; } }
+        Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
+        Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+          getVoices: () => voices, cancel: () => { window.__cancels = (window.__cancels || 0) + 1; }, addEventListener: () => {},
+          speak: u => window.__spoken.push({ text: u.text, voice: u.voice && u.voice.name })
+        } });
+      });
+      await sp.goto(`${SITE}/`);
+      await sp.waitForFunction(() => window.kidvoShell, null, { timeout: 5000 });
+      await sp.evaluate(() => window.kidvoShell.setLang('en'));
+      if (!(await sp.locator('#speak').isVisible())) throw new Error('no read-aloud switch, although the device has an English voice');
+      await sp.click('#speak');
+      await sp.evaluate(() => window.kidvoShell.openApp('nonsense'));
+      await sp.frameLocator('iframe[src^="apps/nonsense/"]').locator('body').waitFor({ timeout: 5000 });
+      await sp.waitForTimeout(600);
+      const f = appFrame(sp, 'nonsense');
+      if (!f) throw new Error('game frame not found');
+      await handshake(f);
+      await sp.waitForFunction(() => window.__spoken.some(s => s.voice === 'Device' && s.text.includes('?')), null, { timeout: 4000 })
+        .catch(() => { throw new Error('the question was not read aloud'); });
+      // What a game passes: lines are read as sentences; a card reads its data-say parts, else its lines, a number
+      // staying with its label.
+      await f.evaluate(() => {
+        const card = document.createElement('div'), answered = document.createElement('div');
+        card.innerHTML = '<h2>Done</h2><p>Your steps</p><p>12</p><button>Next</button>';
+        answered.innerHTML = '<h2>Done</h2><p data-say>Only this</p>';
+        document.body.append(card, answered);
+        kidvo.speak(['One', 'Two?']); kidvo.speak(card); kidvo.speak(answered);
+        card.remove(); answered.remove();
+      });
+      const want = ['One. Two?', 'Done. Your steps 12. Next.', 'Only this.'];
+      await sp.waitForFunction(w => w.every(x => window.__spoken.some(s => s.text === x)), want, { timeout: 3000 })
+        .catch(async () => { throw new Error(`lines and cards read as ${JSON.stringify(await sp.evaluate(() => window.__spoken.slice(-3).map(s => s.text)))}`); });
+      await sp.evaluate(() => window.kidvoShell.setLang('hu'));
+      if (await sp.locator('#speak').isVisible()) throw new Error('a read-aloud switch for a language that has only a network voice');
+      const before = await sp.evaluate(() => window.__spoken.length);
+      if (await f.evaluate(() => kidvo.speak('teszt')) !== false) throw new Error('a line was accepted for reading in Hungarian');
+      if (await sp.evaluate(n => window.__spoken.length - n, before)) throw new Error('something was read with no voice on the device');
+      if (await sp.evaluate(() => window.__spoken.some(s => s.voice === 'Network'))) throw new Error('the network voice was used');
+      // A game sent back behind its card takes its lines with it.
+      await sp.evaluate(() => window.kidvoShell.setLang('en'));
+      const cancels = await sp.evaluate(() => window.__cancels || 0);
+      // Back to the games on the games page, minimize on the desktop: whichever this view shows.
+      await sp.evaluate(() => [...document.querySelectorAll('.win:not([hidden]) [data-act="back"], .win:not([hidden]) [data-act="min"]')].find(b => b.offsetParent).click());
+      if (await sp.evaluate(n => (window.__cancels || 0) - n, cancels) < 1) throw new Error('the game went back to its card and kept talking');
+      // Leave the switch off for the pages that follow (it is kept in this browser).
+      await sp.click('#speak');
+    } finally {
+      await sp.close();
+    }
   });
 
   // With an overlay running (Vo), long text windows must still scroll with the wheel or trackpad.
@@ -391,27 +500,77 @@ async function run(name) {
     await page.locator(`.win iframe[src="teachers/${lang}.html"]`).waitFor({ state: 'visible', timeout: 3000 });
   });
 
-  // Phones: every game must fit a 360 px wide screen without sideways scrolling.
+  // Phones: every game must fit a 360 px wide screen without sideways scrolling. An Explorer is playing: their
+  // letters are the biggest, and the games start straight away instead of asking who is playing.
   for (const [label, viewport] of [['phone', { width: 360, height: 640 }], ['phone landscape', { width: 740, height: 360 }]]) {
     const ctx = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
+    await ctx.addInitScript(() => {
+      try { if (!localStorage.getItem('kidvo:shell')) localStorage.setItem('kidvo:shell', JSON.stringify({ band: 'explorers' })); } catch { /* a game frame has no storage */ }
+      // A voice on the device, so the read-aloud switch is in the top bar when it has to fit.
+      if (window === window.top) {
+        Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: class { constructor(text) { this.text = text; } } });
+        Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+          getVoices: () => [{ name: 'Device', lang: 'en-US', localService: true, default: true }], speak() {}, cancel() {}, addEventListener() {}
+        } });
+      }
+    });
     await guard(ctx, `${name} ${label}`);
     const phone = await ctx.newPage();
     phone.on('pageerror', err => problems.push(`${name} ${label} page error: ${err.message}`));
     await phone.goto(`${SITE}/`);
     await phone.waitForFunction(() => window.kidvoShell, null, { timeout: 5000 });
     await step(`the games page and its top bar fit a ${label} screen`, async () => {
+      if (!(await phone.locator('#speak').isVisible())) throw new Error('the read-aloud switch is not in the top bar, so the test proves less');
       const over = await phone.evaluate(() => {
         const wide = n => n.scrollWidth - n.clientWidth;
         return { page: wide(document.documentElement), play: wide(document.getElementById('play')), bar: wide(document.getElementById('topbar')) };
       });
       if (over.page > 1 || over.play > 1 || over.bar > 1) throw new Error(`wider than the screen: ${JSON.stringify(over)}`);
     });
+    // An Explorer sees how to play once, before the first round; the next time the game starts at once.
+    if (label === 'phone') await step('an Explorer sees how to play once', async () => {
+      const open = async () => {
+        await phone.evaluate(() => window.kidvoShell.openApp('nonsense'));
+        await phone.waitForTimeout(700);
+        const f = appFrame(phone, 'nonsense');
+        if (!f) throw new Error('game did not load');
+        await handshake(f);
+        return f;
+      };
+      const close = () => phone.evaluate(() => document.querySelectorAll('.win').forEach(w => w.querySelector('[data-act="close"]').click()));
+      let f = await open();
+      await f.waitForFunction(() => !document.getElementById('overlay').hidden && document.querySelector('#overlay .howto'), null, { timeout: 3000 })
+        .catch(() => { throw new Error('no how-to card the first time'); });
+      await f.evaluate(() => document.querySelector('#overlay .btn').click());
+      await f.waitForFunction(() => document.getElementById('overlay').hidden && window.__nonsense.current(), null, { timeout: 3000 })
+        .catch(() => { throw new Error('"Let\'s play!" did not start the round'); });
+      await close();
+      await phone.waitForTimeout(300);
+      f = await open();
+      await f.waitForFunction(() => window.__nonsense.current(), null, { timeout: 3000 })
+        .catch(() => { throw new Error('the second time, the round did not start'); });
+      if (await f.evaluate(() => !!document.querySelector('#overlay .howto'))) throw new Error('the how-to card came back');
+      await close();
+    });
+    // Explorers have not learned percentages yet: SORT-1 says it is "very sure" instead.
+    if (label === 'phone') await step("an Explorer's SORT-1 gives no percentage", async () => {
+      await phone.evaluate(() => window.kidvoShell.openApp('sorter'));
+      await phone.waitForTimeout(700);
+      const f = appFrame(phone, 'sorter');
+      if (!f) throw new Error('game did not load');
+      await handshake(f);
+      const said = await f.evaluate(() => { window.__sorter.learn(); return window.__sorter.says('greenapple'); });
+      if (/%/.test(said)) throw new Error(`an Explorer hears a percentage: "${said}"`);
+      await phone.evaluate(() => document.querySelectorAll('.win').forEach(w => w.querySelector('[data-act="close"]').click()));
+    });
+
     for (const app of windowApps) {
       await step(`${app.id} fits a ${label} screen`, async () => {
         await phone.evaluate(id => window.kidvoShell.openApp(id), app.id);
         await phone.waitForTimeout(700);
         const frame = appFrame(phone, app.id);
         if (!frame) throw new Error('game did not load');
+        if (await frame.evaluate(() => document.documentElement.dataset.band) !== 'explorers') throw new Error('the game is not in the Explorers\' letters, so the test proves less');
         const over = await frame.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         if (over > 1) throw new Error(`the game is ${over}px wider than the screen`);
         const box = await phone.locator(`iframe[src^="apps/${app.id}/"]`).boundingBox();

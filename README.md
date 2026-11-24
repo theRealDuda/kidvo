@@ -17,7 +17,8 @@ Every game has a **practice AI**: a clearly labelled pretend AI (like ORACLE-300
 
 - **No real AI, no internet calls.** Every sentence a child sees is in this repository and reviewed.
 - **No personal data.** No accounts, ads, tracking or cookies. Progress stays in the browser. The site only counts game plays, without names or IDs: which game, how long, and how many rounds ([how](counter/README.md)).
-- **Two age bands.** Explorers (7–9) and Investigators (10–13).
+- **Two age bands, chosen once.** Explorers (7–9) and Investigators (10–13) get different questions, mazes and endings, and Explorers also get bigger letters, fewer words and a "how to play" card. A child chooses once, and every game follows.
+- **Read aloud.** A speaker switch reads the games aloud for children who cannot read yet, with voices built into the device, so no text leaves it.
 - **Three languages to start:** English, Hungarian and Romanian.
 - **A printable guide for parents and teachers** comes with every game.
 - **A teacher's kit, "kidvo in one lesson"** ([`teachers/`](teachers/en.html)): a 45-minute lesson plan on one printable page, in English, Hungarian and Romanian.

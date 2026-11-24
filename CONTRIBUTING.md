@@ -44,7 +44,7 @@ The list follows the spirit of the EC/OECD AI Literacy Framework for primary and
 - **Explorers (7–9):** very short sentences, tap-only, wrong AI answers that are easy to spot.
 - **Investigators (10–13):** longer reasoning, believable wrong answers, trade-offs.
 
-A game can support one band or both.
+A game can support one band or both. The desktop remembers who is playing, so a child chooses only once for every game: a game for both bands reads `kidvo.band`, shows its own "Who is playing?" card only while it is `null`, and passes the child's choice on with `kidvo.setBand`. Robot Maze shows the pattern. Explorers are still learning to read: give them bigger letters (`[data-band="explorers"]` in your CSS), fewer words per step (a shorter text can live under `<key>_explorers`), and a picture-first "how to play" card, as Secret Keeper does.
 
 ## The practice AI
 
@@ -96,6 +96,11 @@ Robot Maze (`apps/maze`) is the reference game. Copy its patterns.
 ```js
 kidvo.t('key', { n: 3 })        // your text in the player's language
 kidvo.onLang(lang => {})        // re-render texts when the language changes
+kidvo.band                      // who is playing: 'explorers', 'investigators', or null until a child chose
+kidvo.onBand(band => {})        // now, and when a child changes it (in your game or another one)
+kidvo.setBand('explorers')      // the child chose in your game; <html data-band="..."> follows for your CSS
+kidvo.speak('Is it true?')       // read aloud if the player switched it on: a line, [lines] or a card element
+                                // (never speechSynthesis: CI blocks it)
 kidvo.store.get / set           // up to 32 KB per game, in the visitor's browser
 kidvo.emit('solved', {...})     // others hear "my-game:solved"
 kidvo.on('maze:solved', fn)     // listen to other games

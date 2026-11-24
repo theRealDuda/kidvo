@@ -18,19 +18,20 @@
   html, body { margin: 0; height: 100%; }
   body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); display: flex; flex-direction: column; position: relative; }
   .bot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--panel); color: var(--text); border-bottom: 2px solid var(--ink); font-family: var(--mono); }
-  .eye { width: 14px; height: 14px; flex: none; background: var(--led); box-shadow: 0 0 0 3px #4a2030, 0 0 10px var(--led); }
-  .bot.thinking .eye { animation: blink .5s steps(2) infinite; }
+  .face { width: 36px; height: 36px; flex: none; }
+  .face svg { display: block; width: 100%; height: 100%; }
+  .bot.thinking .face .led { animation: blink .5s steps(2) infinite; }
   @keyframes blink { 50% { opacity: .25; } }
   .bot-id { flex: 1; min-width: 0; }
   .bot-name { font-weight: 800; letter-spacing: .06em; }
-  .bot-tag { color: var(--dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+  .bot-tag { color: var(--dim); font-size: 11.5px; }
   .hud { text-align: right; font: 700 12px/1.4 var(--mono); font-variant-numeric: tabular-nums; }
   main { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 12px 18px; display: flex; flex-direction: column; gap: 12px; }
   .q { align-self: flex-end; max-width: 88%; background: #fff; border: 2px solid var(--ink); padding: 8px 12px; font-weight: 700; }
-  .q small { display: block; font: 700 10.5px var(--mono); color: var(--soft); text-transform: uppercase; letter-spacing: .08em; }
+  .q small { display: block; font: 700 12px var(--mono); color: var(--soft); }
   .a { align-self: flex-start; max-width: 92%; background: var(--panel-2); color: var(--text); border-left: 4px solid var(--text); padding: 9px 12px; font: 14.5px/1.5 var(--mono); }
   .lib { background: var(--paper); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 10px 12px; }
-  .lib b { display: block; font: 800 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+  .lib b { display: block; font: 800 12.5px var(--mono); margin-bottom: 2px; }
   .verdict { padding: 9px 12px; border: 2px dashed var(--ink); background: var(--good); font-weight: 600; }
   .verdict.bad { background: var(--bad); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -54,17 +55,43 @@
   .note { color: var(--soft); font-size: 13.5px; }
   .stat { display: flex; justify-content: space-between; font: 700 13px var(--mono); }
   .earned { display: flex; flex-wrap: wrap; gap: 6px; }
-  .earned span { font: 800 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
+  .earned span { font: 800 12px/1 var(--mono); padding: 5px 7px; border: 2px solid var(--ink); background: var(--good); }
   .lesson { padding: 10px 12px; background: var(--sun); border: 2px solid var(--ink); font-weight: 700; }
+  .ask { font-weight: 700; }
+  .choices { display: grid; gap: 8px; }
+  /* The age picker comes before anyone knows who is playing, so a 7-year-old must be able to read it too. */
+  .btn.band { font-size: 16px; } .btn.band small { font-size: 14px; }
+  /* How to play (Explorers, once): a picture and one short line per rule. */
+  .howto { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .howto li { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; font: 600 17px/1.35 var(--sans); }
+  .howto .pic { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--ink); }
+  .howto .pic > svg:not([width]) { width: 44px; height: 44px; }
+
+  /* Explorers (7–9) are learning to read: everything they read is in bigger, plain letters. The robot's name and
+     the headings keep the look; QUIZ-O-TRON keeps its dark panel, so it still looks like a machine. */
+  [data-band="explorers"] .bot-tag { font: 13px var(--sans); }
+  [data-band="explorers"] .hud { font-size: 14px; max-width: 50%; }
+  [data-band="explorers"] .q { font-size: 18px; }
+  [data-band="explorers"] .q small { font: 700 13px var(--sans); }
+  [data-band="explorers"] .a { font: 18px/1.5 var(--sans); }
+  [data-band="explorers"] .lib, [data-band="explorers"] .verdict { font-size: 17px; }
+  [data-band="explorers"] .lib b { font: 800 14px var(--sans); }
+  [data-band="explorers"] .btn { font: 800 17px/1.2 var(--sans); }
+  [data-band="explorers"] .btn small { font-size: 14px; }
+  [data-band="explorers"] .card { font-size: 17px; }
+  [data-band="explorers"] .card h2 { font-size: 21px; }
+  [data-band="explorers"] .note { font-size: 16px; }
+  [data-band="explorers"] .stat { font: 600 16px var(--sans); }
+  [data-band="explorers"] .earned span { font: 800 14px/1 var(--sans); }
   @media (max-width: 420px) { .row .btn { flex: 1 1 130px; } .hud { font-size: 11px; } }
-  @media (max-height: 480px) { .bot { padding: 6px 10px; } .bot-tag { display: none; } main { padding: 8px 10px 10px; gap: 8px; } }
+  @media (max-height: 480px) { .bot { padding: 6px 10px; } .face { width: 24px; height: 24px; } .bot-tag { display: none; } main { padding: 8px 10px 10px; gap: 8px; } }
   @media (pointer: coarse) { .btn { min-height: 48px; padding: 12px 16px; } footer button { padding: 10px 0; } }
-  @media (prefers-reduced-motion: reduce) { .bot.thinking .eye { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .bot.thinking .face .led { animation: none; } }
 </style>
 </head>
 <body>
   <div class="bot" id="bot">
-    <span class="eye" aria-hidden="true"></span>
+    <span class="face" id="face" aria-hidden="true"></span>
     <span class="bot-id"><span class="bot-name">QUIZ-O-TRON</span><br><span class="bot-tag" id="tag"></span></span>
     <span class="hud"><span id="progress"></span></span>
   </div>
@@ -75,11 +102,23 @@
 <script>
 (() => {
   const t = (k, v) => kidvo.t(k, v);
+  // A text with a shorter version for Explorers (key_explorers) uses it; everyone else reads the shared one.
+  const tv = (k, v) => { const own = k + '_' + band, s = t(own, v); return s === own ? t(k, v) : s; };
   const $ = id => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // Read aloud (kidvo.speak, when the player switched it on in the top bar). said() marks what an answer adds to
+  // a card, so after an answer only that is read, not the whole card again.
+  const said = n => { n.dataset.say = ''; return n; };
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  /* ---------------- pixel art ---------------- */
+  // QUIZ-O-TRON is a television with rabbit ears, a sure smile and a bow tie (rows as for kidvo.sprite in sdk.js).
+  // The tips of its ears are its lamps: they blink while it thinks.
+  const QUIZ = ['.Y........Y.', '..K......K..', '.KKKKKKKKKK.', 'KBBBBBBBBBBK', 'KBKKBBBBKKBK', 'KBKKBBBBKKBK', 'KBBBBBBBBBBK', 'KBKBBBBBBKBK', 'KBBKKKKKKBBK', 'KbbbbbbbbbbK', '.KKKKKKKKKK.', '...RRKKRR...'];
+  const quizFace = scale => kidvo.sprite(QUIZ, { colors: { B: '#9ec5ff', b: '#6f9fe8' }, led: 'Y', scale });
+  $('face').append(quizFace());
 
   // Every question has q_<id> (the question), a_<id> (QUIZ-O-TRON's answer) and f_<id> (the library fact).
   // "made" answers are made up on purpose. Each round mixes 3 true and 3 made-up answers.
@@ -97,7 +136,7 @@
   const PER_KIND = 3;
   let lastIds = new Set(); // the previous round's facts, in memory only, so two rounds in a row never repeat one
 
-  let band = null, round = [], i = 0, checks = 0, score = 0, caught = 0, checked = 0, checkedMade = 0, best = 0, falseAlarms = 0;
+  let band = null, round = [], i = 0, checks = 0, score = 0, caught = 0, checked = 0, checkedMade = 0, bests = {} /* best score per band */, falseAlarms = 0;
   let current = null, overlayView = null;
   let askToken = 0; // a question still "thinking" stops when a new round starts or progress is erased
   let resetArmed = false, resetTimer = null;
@@ -105,6 +144,7 @@
   function hud() {
     $('tag').textContent = t('tag');
     $('progress').textContent = band && round.length ? t('progress', { n: Math.min(i + 1, round.length), total: round.length, score }) : '';
+    const best = band && bests[band];
     $('best').textContent = best ? t('best', { n: best }) : '';
     $('change-band').textContent = band ? t('playingAs', { band: t('band_' + band), ages: POOL[band].ages }) : '';
     $('reset').textContent = t(resetArmed ? 'resetConfirm' : 'reset');
@@ -146,41 +186,42 @@
     $('bot').classList.remove('thinking');
     current.typed = true;
     paint();
+    kidvo.speak([t('q_' + item.id), t('a_' + item.id), tv('decide')], { fresh: true });
   }
 
   function paint() {
     const { item, typed, checkedThis, call } = current;
     const stage = $('stage');
     stage.replaceChildren();
-    const q = el('div', 'q'); q.append(el('small', null, t('youAsk')), document.createTextNode(t('q_' + item.id)));
+    const q = el('div', 'q'); q.append(el('small', null, t('qLabel')), document.createTextNode(t('q_' + item.id)));
     stage.append(q);
     if (!typed) { stage.append(el('div', 'a', '...')); return; }
     stage.append(el('div', 'a', t('a_' + item.id)));
-    if (checkedThis || call !== null) {
-      const lib = el('div', 'lib'); lib.append(el('b', null, t('library')), document.createTextNode(t('f_' + item.id)));
+    const lib = el('div', 'lib'); lib.append(el('b', null, t('library')), document.createTextNode(t('f_' + item.id)));
+    if (call !== null) {
       if (checkedThis) stage.append(lib);
-      if (call !== null) {
-        const right = call === item.made;
-        const key = item.made ? (right ? 'fbCaught' : 'fbFooled') : (right ? 'fbTrueRight' : 'fbTrueWrong');
-        stage.append(el('p', 'verdict' + (right ? '' : ' bad'), t(key)));
-        if (!checkedThis) stage.append(lib);
-        const next = el('button', 'btn go', t(i + 1 < round.length ? 'next' : 'finish')); next.type = 'button';
-        next.addEventListener('click', () => { i++; ask(); });
-        stage.append(next);
-        next.focus();
-        return;
-      }
+      const right = call === item.made;
+      const key = item.made ? (right ? 'fbCaught' : 'fbFooled') : (right ? 'fbTrueRight' : 'fbTrueWrong');
+      stage.append(el('p', 'verdict' + (right ? '' : ' bad'), tv(key)));
+      if (!checkedThis) stage.append(lib);
+      const next = el('button', 'btn go', t(i + 1 < round.length ? 'next' : 'finish')); next.type = 'button';
+      next.addEventListener('click', () => { i++; ask(); });
+      stage.append(next);
+      next.focus();
+      return;
     }
-    stage.append(el('p', 'note', t('decide')));
+    stage.append(el('p', 'note', tv('decide')));
     const row = el('div', 'row');
     const mk = (cls, key, fn, disabled) => { const b = el('button', 'btn ' + cls, t(key)); b.type = 'button'; b.disabled = !!disabled; b.addEventListener('click', fn); row.append(b); return b; };
     mk('true', 'soundsTrue', () => decide(false));
     mk('made', 'madeUp', () => decide(true));
     if (!checkedThis) {
-      const c = mk('check', 'check', () => { checks--; checked++; if (current.item.made) checkedMade++; current.checkedThis = true; hud(); paint(); kidvo.emit('checked', {}); }, checks <= 0);
+      const c = mk('check', 'check', () => { checks--; checked++; if (current.item.made) checkedMade++; current.checkedThis = true; hud(); paint(); kidvo.speak(t('f_' + current.item.id), { fresh: true }); kidvo.emit('checked', {}); }, checks <= 0);
       c.append(el('small', null, t('checksLeft', { n: checks })));
     }
     stage.append(row);
+    // A fact checked before deciding goes under the buttons, so they stay where the child's finger is.
+    if (checkedThis) stage.append(lib);
     // Focus the row, not "Sounds true": a highlighted answer nudges the child. Tab reaches the buttons.
     row.tabIndex = -1; row.focus({ preventScroll: true });
   }
@@ -193,11 +234,12 @@
     if (saidMade && !current.item.made) falseAlarms++;
     hud();
     paint();
+    kidvo.speak([$('stage').querySelector('.verdict'), current.checkedThis ? null : t('f_' + current.item.id)], { fresh: true });
   }
 
   function finish() {
-    best = Math.max(best, score);
-    kidvo.store.set('best', best).catch(() => {});
+    bests[band] = Math.max(bests[band] || 0, score);
+    kidvo.store.set('bests', bests).catch(() => {});
     kidvo.emit('done', { score, total: round.length, band });
     hud();
     const earned = [];
@@ -212,19 +254,25 @@
       for (const [k, v] of [['statScore', t('ofTotal', { n: score, total: round.length })], ['statCaught', t('ofTotal', { n: caught, total: PER_KIND })], ['statChecked', String(checked)]]) {
         const s = el('div', 'stat'); s.append(el('span', null, t(k)), el('span', null, v)); card.append(s);
       }
-      if (checked) card.append(el('p', 'note', t('checksLanded', { n: checkedMade, total: checked })));
+      // How many checks landed on a made-up answer is a statistic for older players.
+      if (checked && band !== 'explorers') card.append(el('p', 'note', t('checksLanded', { n: checkedMade, total: checked })));
       if (earned.length) { const e = el('div', 'earned'); for (const b of earned) e.append(el('span', null, t(b))); card.append(e); }
-      card.append(el('p', null, t('reflect')));
+      // Explorers look back at what they saw. Investigators carry it over to a case of their own:
+      // trust it because it sounded sure, check it, or never use AI again (only checking keeps the help).
+      const apply = band === 'investigators';
+      card.append(el('p', apply ? 'ask' : null, t(apply ? 'applyQ' : 'reflect')));
       if (answered === null) {
-        const row = el('div', 'row');
-        for (const [label, val] of [[t('yesSometimes'), true], [t('noNever'), false]]) {
+        const row = el('div', apply ? 'choices' : 'row');
+        const options = apply ? ['applyA', 'applyB', 'applyC'].map(k => [t(k), k]) : [[t('yesSometimes'), true], [t('noNever'), false]];
+        for (const [label, val] of options) {
           const b = el('button', 'btn', label); b.type = 'button';
           b.addEventListener('click', () => { answered = val; showOverlay(view); });
           row.append(b);
         }
         card.append(row);
       } else {
-        card.append(el('p', null, t(answered ? 'fbSometimes' : 'fbNever')), el('p', 'lesson', t('lesson')));
+        card.append(said(apply ? el('p', 'verdict' + (answered === 'applyB' ? '' : ' bad'), t('fb_' + answered)) : el('p', null, tv(answered ? 'fbSometimes' : 'fbNever'))),
+          said(el('p', 'lesson', tv('lesson'))));
         const again = el('button', 'btn go', t('again')); again.type = 'button';
         again.addEventListener('click', start);
         card.append(again);
@@ -234,20 +282,50 @@
     showOverlay(view);
   }
 
+  /* ---------------- how to play: Explorers see it once, before their first round ---------------- */
+  // Pictures first, one short line each. Kept in this game's storage; "start over" shows it again.
+  const PIC = {
+    bot: () => quizFace(4),
+    calls: '<svg viewBox="0 0 48 48"><rect x="3" y="12" width="19" height="24" fill="#c6f3e3" stroke="#191833" stroke-width="3"/><path d="M8 24l3 4 6-8" fill="none" stroke="#191833" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="26" y="12" width="19" height="24" fill="#ffd6e0" stroke="#191833" stroke-width="3"/><path d="M31 19l9 10M40 19l-9 10" stroke="#191833" stroke-width="3" stroke-linecap="round"/></svg>',
+    book: '<svg viewBox="0 0 48 48"><path d="M24 12c-5-4-12-4-18-2v28c6-2 13-2 18 2c5-4 12-4 18-2V10c-6-2-13-2-18 2z" fill="#fff8dc" stroke="#191833" stroke-width="3" stroke-linejoin="round"/><path d="M24 12v28" stroke="#191833" stroke-width="3"/></svg>'
+  };
+  let howtoSeen = false;
+  function begin() {
+    if (band !== 'explorers' || howtoSeen) { start(); return; }
+    askToken++; // a question still "thinking" behind the card stops
+    $('bot').classList.remove('thinking');
+    $('stage').replaceChildren(); current = null; round = [];
+    hud();
+    showOverlay(() => {
+      const card = el('div', 'card');
+      const list = el('ol', 'howto');
+      for (const [pic, key] of [['bot', 'howto1'], ['calls', 'howto2'], ['book', 'howto3']]) {
+        const p = el('span', 'pic'); p.setAttribute('aria-hidden', 'true');
+        if (typeof PIC[pic] === 'string') p.innerHTML = PIC[pic]; else p.append(PIC[pic]());
+        const li = el('li'); li.append(p, el('span', null, t(key))); list.append(li);
+      }
+      const go = el('button', 'btn go', t('howtoGo')); go.type = 'button';
+      go.addEventListener('click', () => { howtoSeen = true; kidvo.store.set('howto', true).catch(() => {}); start(); });
+      card.append(el('h2', null, t('howto')), list, go);
+      return card;
+    });
+  }
+
   function pickBand() {
     showOverlay(() => {
       const card = el('div', 'card');
       card.append(el('h2', null, t('who')), el('p', 'note', t('whoNote')));
       for (const key of Object.keys(POOL)) {
-        const b = el('button', 'btn'); b.type = 'button';
+        const b = el('button', 'btn band'); b.type = 'button';
         b.append(el('span', null, t('band_' + key)), el('small', null, t('ages', { ages: POOL[key].ages })));
-        b.addEventListener('click', () => { band = key; kidvo.store.set('band', key).catch(() => {}); start(); });
+        // Every game hears the choice and the desktop remembers it, so the next game does not ask again.
+        b.addEventListener('click', () => { band = key; kidvo.setBand(key); begin(); });
         card.append(b);
       }
       return card;
     });
   }
-  function showOverlay(view) { overlayView = view; $('overlay').replaceChildren(view()); $('overlay').hidden = false; focusCard(); }
+  function showOverlay(view) { overlayView = view; $('overlay').replaceChildren(view()); $('overlay').hidden = false; focusCard(); kidvo.speak($('overlay').querySelector('.card'), { fresh: true }); }
   function focusCard() { const c = $('overlay').querySelector('.card'); if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); } }
   function closeOverlay() { overlayView = null; $('overlay').hidden = true; }
 
@@ -261,9 +339,11 @@
     }
     clearTimeout(resetTimer); resetArmed = false;
     askToken++;
-    best = 0; band = null; round = []; current = null;
+    bests = {}; band = null; round = []; current = null; howtoSeen = false;
     kidvo.store.remove('best').catch(() => {});
+    kidvo.store.remove('bests').catch(() => {});
     kidvo.store.remove('band').catch(() => {});
+    kidvo.store.remove('howto').catch(() => {});
     $('bot').classList.remove('thinking');
     $('stage').replaceChildren();
     hud();
@@ -282,13 +362,30 @@
   };
 
   hud();
-  pickBand();
+  // The desktop may have said who is playing before this script ran: then the card would only flash (and be read).
+  if (!kidvo.band) pickBand();
+  // Who is playing comes from the desktop, which remembers the last choice made in any game.
+  let loaded = false;
+  kidvo.onBand(b => { if (loaded && POOL[b] && b !== band) { band = b; begin(); } });
   kidvo.ready(async () => {
     try {
-      best = (await kidvo.store.get('best')) || 0;
-      const saved = await kidvo.store.get('band');
-      if (saved && POOL[saved]) { band = saved; start(); } else hud();
-    } catch { /* first visit */ }
+      bests = (await kidvo.store.get('bests')) || {};
+      if (typeof bests !== 'object') bests = {};
+      // A best score from before each band had its own goes to the band that was playing then.
+      const old = await kidvo.store.get('best'), was = await kidvo.store.get('band');
+      const owner = POOL[was] ? was : POOL[kidvo.band] ? kidvo.band : null;
+      if (typeof old === 'number' && old > 0 && owner) {
+        bests[owner] = Math.max(bests[owner] || 0, old);
+        kidvo.store.set('bests', bests).catch(() => {});
+        kidvo.store.remove('best').catch(() => {});
+      }
+      howtoSeen = !!(await kidvo.store.get('howto'));
+      // A band this game kept before the desktop remembered it is handed to the desktop.
+      const saved = was;
+      const b = POOL[kidvo.band] ? kidvo.band : POOL[saved] ? saved : null;
+      if (b) { band = b; if (!kidvo.band) kidvo.setBand(b); begin(); } else hud();
+    } catch { if (!band) pickBand(); /* storage failed: ask, rather than show nothing */ }
+    loaded = true;
   });
 })();
 </script>

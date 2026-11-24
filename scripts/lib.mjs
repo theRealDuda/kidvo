@@ -56,6 +56,8 @@ export const SHELL_FILES = ['../../shell/sdk.js', '../../shell/ask-ai.js'];
 // Hard failures: things that leak data, open side doors or hijack the page.
 export const FORBIDDEN = [
   [/\bRTCPeerConnection\b/, 'WebRTC is not allowed (it can bypass the content policy).'],
+  // A network voice sends the text to a speech service, and the content policy cannot stop it.
+  [/\bspeechSynthesis\b|\bSpeechSynthesisUtterance\b/, 'Read text aloud with kidvo.speak(): the desktop uses voices on the device only.'],
   [/\bWebSocket\b/, 'WebSockets are not allowed. kidvo apps never talk to servers.'],
   [/\bsendBeacon\b/, 'navigator.sendBeacon is not allowed.'],
   [/\bimportScripts\b/, 'importScripts is not allowed.'],

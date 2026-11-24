@@ -54,6 +54,14 @@ button { font: inherit; color: inherit; }
 }
 .lang-btn[aria-pressed="true"] { background: var(--ink); color: var(--sun); }
 .lang-btn:hover { background: var(--sun); color: var(--ink); }
+/* Read aloud: on and off like a language button; hidden where the device has no voice of its own. */
+#speak {
+  flex: none; display: grid; place-items: center; width: 34px; height: 24px; padding: 0;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); cursor: pointer;
+}
+#speak[hidden] { display: none; }
+#speak[aria-pressed="true"] { background: var(--ink); color: var(--sun); }
+#speak:hover { background: var(--sun); color: var(--ink); }
 
 /* ---------- desktop ---------- */
 #desktop {
@@ -304,21 +312,11 @@ button { font: inherit; color: inherit; }
 .parents-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .parents-wrap iframe { flex: 1; width: 100%; border: 0; background: #fff; }
 .parents-wrap .print-link { flex: none; align-self: flex-end; margin: 8px 10px; }
-.kind {
-  display: inline-block;
-  padding: 3px 6px 2px;
-  border: 1.5px solid var(--ink);
-  color: var(--ink);
-  font: 800 10px/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase;
-}
-.kind.human { background: var(--human); }
-.kind.ai { background: var(--ai); }
-.kind.hybrid { background: var(--hybrid); }
 
 /* ---------- built-in documents (About, Contribute, app info) ---------- */
 .doc { padding: 18px 20px 22px; max-width: 62ch; font-size: 14px; }
 .doc h2 { margin: 0 0 6px; font: 800 20px/1.15 var(--font-ui); text-wrap: balance; }
-.doc h3 { margin: 18px 0 6px; font: 800 13px/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: .06em; }
+.doc h3 { margin: 18px 0 6px; font: 800 15px/1.2 var(--font-ui); }
 .doc p { margin: 0 0 10px; }
 .doc .lede { font-size: 15px; }
 .doc ol, .doc ul { margin: 0 0 10px; padding-left: 22px; display: grid; gap: 6px; }
@@ -626,6 +624,7 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .win-btns { gap: 6px; }
   .win-btns button { width: 36px; height: 36px; font-size: 16px; }
   .lang-btn { height: 32px; min-width: 42px; }
+  #speak { height: 32px; width: 42px; }
   .view-btn { height: 28px; min-width: 38px; justify-content: center; }
   body[data-view="play"] .win-back { width: 44px; height: 36px; font-size: 24px; }
   #start-btn { height: 38px; }
@@ -640,6 +639,7 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .win-bar { height: 36px; }
   .win-btns button { width: 32px; height: 32px; }
   .lang-btn { height: 28px; }
+  #speak { height: 28px; }
   .view-btn { height: 24px; }
   body[data-view="play"] .win-back { height: 32px; }
   #start-btn, .task, .tray-btn { height: 34px; }
@@ -650,4 +650,10 @@ body[data-view="play"] .win-btns [data-act="max"] { display: none; }
   .win, .toast, .tiles > *, .cloud, .star, .card:hover .card-art img { animation: none; }
   .card, #page, #sky { transition: none; }
   .card:hover .card-art::after { transition: none; }
+}
+/* The narrowest phones: room in the top bar for the read-aloud switch. The buttons keep their finger size;
+   the name gives way and the logo stays. */
+@media (max-width: 400px) {
+  #topbar { gap: 6px; padding-right: 6px; }
+  .tb-brand { font-size: 0; gap: 0; }
 }

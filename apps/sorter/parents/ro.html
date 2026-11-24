@@ -14,7 +14,7 @@
   body { margin: 0 auto; max-width: 820px; padding: 24px 28px 28px; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
   header { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding-bottom: 14px; border-bottom: 3px solid var(--ink); }
   .logo { width: 44px; height: 44px; grid-row: span 2; }
-  .kicker { font: 800 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+  .kicker { font: 800 13px/1 var(--mono); color: var(--soft); }
   h1 { margin: 0; font: 800 28px/1.1 var(--mono); letter-spacing: -.01em; text-wrap: balance; }
   .sub { grid-column: 1 / -1; margin: 6px 0 0; font-size: 16px; }
   .facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -23,7 +23,7 @@
   .facts span:nth-child(3) { background: var(--pink); }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; margin-top: 6px; }
   section { min-width: 0; }
-  h2 { margin: 16px 0 6px; font: 800 13px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  h2 { margin: 16px 0 6px; font: 800 14.5px/1.2 var(--mono); }
   p { margin: 0 0 8px; }
   ol, ul { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 5px; }
   li::marker { font-weight: 800; }
@@ -56,11 +56,11 @@
   <div class="kicker">kidvo · Ghid pentru părinți și profesori</div>
   <h1>Antrenează Sortatorul</h1>
   <p class="sub">Copilul învață o mică inteligență artificială cu ajutorul exemplelor și descoperă singur cum exemplele părtinitoare fac un AI părtinitor.</p>
-  <div class="facts"><span>7–13 ani</span><span>10 minute</span><span>Rulează complet în browser</span></div>
+  <div class="facts"><span>7–13 ani</span><span>10 minute</span><span>Rulează complet în browser</span><span>Citire cu voce tare</span></div>
 </header>
 <div class="cols">
-  <section><h2>Ce face copilul</h2><ol><li>Etichetează opt fructe ca „măr” sau „nu e măr”, ca să-l învețe pe SORT-1, un AI foarte mic.</li><li>Se uită cum SORT-1 sortează fructe noi și decide de fiecare dată dacă are dreptate.</li><li>Descoperă că SORT-1 crede că merele verzi și galbene nu sunt mere și alege motivul.</li><li>Îl învață din nou pe SORT-1 cu exemple mai variate și vede cum se descurcă mai bine.</li><li>Rundă bonus, dacă vrea: alege 8 din 16 fructe și îl învață pe SORT-1 de la zero. Un amestec de mere și fructe care doar seamănă cu merele obține 6 din 6 și insigna Curator.</li></ol><h2>Ce învață</h2><ul><li><b>AI-ul învață din exemple.</b> SORT-1 știe doar ce i s-a arătat.</li><li><b>Exemplele părtinitoare fac un AI părtinitor.</b> Primele exemple conțin doar mere roșii, așa că SORT-1 decide că merele sunt roșii. Asta e părtinirea, iar copilul o descoperă înainte să i-o explice cineva.</li></ul></section>
-  <section><h2>Cum funcționează SORT-1</h2><p>SORT-1 folosește o metodă reală, foarte simplă, de învățare automată (cel mai apropiat vecin). Se uită la trei lucruri, culoare, formă și mărime, și copiază eticheta exemplului cel mai asemănător. Pare mereu foarte sigur, chiar și când greșește. La fiecare test, o bandă „Ce ține minte SORT-1” arată toate exemplele cu etichetele copilului și îl evidențiază pe cel copiat, așa că copilul vede de ce a ghicit așa.</p><h2>Pentru ambele grupe de vârstă</h2><p>Cei mici se bucură de lecție și de surpriză. Cei mari pot merge mai departe: de ce a crezut SORT-1 că și cireașa e un măr? Ce exemple au reparat asta?</p></section>
+  <section><h2>Ce face copilul</h2><ol><li>Etichetează opt fructe ca „măr” sau „nu e măr”, ca să-l învețe pe SORT-1, un AI foarte mic.</li><li>Se uită cum SORT-1 sortează fructe noi și decide de fiecare dată dacă are dreptate.</li><li>Descoperă că SORT-1 crede că merele verzi și galbene nu sunt mere și alege motivul.</li><li>Îl învață din nou pe SORT-1 cu exemple mai variate și vede cum se descurcă mai bine.</li><li>Alege 8 din 16 fructe și îl învață pe SORT-1 de la zero: ultimul pas pentru Cercetători, o rundă bonus, dacă vrea, pentru Exploratori. Un amestec de mere și fructe care doar seamănă cu merele obține 6 din 6 și insigna Curator.</li></ol><h2>Ce învață</h2><ul><li><b>AI-ul învață din exemple.</b> SORT-1 știe doar ce i s-a arătat.</li><li><b>Exemplele părtinitoare fac un AI părtinitor.</b> Primele exemple conțin doar mere roșii, așa că SORT-1 decide că merele sunt roșii. Asta e părtinirea, iar copilul o descoperă înainte să i-o explice cineva.</li></ul></section>
+  <section><h2>Cum funcționează SORT-1</h2><p>SORT-1 folosește o metodă reală, foarte simplă, de învățare automată (cel mai apropiat vecin). Se uită la trei lucruri, culoare, formă și mărime, și copiază eticheta exemplului cel mai asemănător. Pare mereu foarte sigur, chiar și când greșește. La fiecare test, o bandă „Ce ține minte SORT-1” arată toate exemplele cu etichetele copilului și îl evidențiază pe cel copiat, așa că copilul vede de ce a ghicit așa.</p><h2>Două moduri</h2><div class="mode ex"><b>Explorator, 7–9 ani</b>Propoziții mai scurte, iar SORT-1 spune „sunt foarte sigur” în loc de un procent. Întrebarea „de ce a greșit?” are trei răspunsuri, fiecare cu o imagine.</div><div class="mode inv"><b>Cercetător, 10–13 ani</b>SORT-1 își spune siguranța în procente, iar întrebarea „de ce” are patru răspunsuri. La final, copilul aplică lecția la un caz real, un AI care învață fețe din poze părtinitoare, iar ca ultim pas alege singur exemplele pentru SORT-1.</div></section>
 </div>
 <div class="talk">
   <h2>Vorbiți despre joc după aceea</h2>

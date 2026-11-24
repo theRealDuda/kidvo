@@ -46,7 +46,9 @@ jobs:
     # Pinned: ubuntu-latest became Ubuntu 26.04 (2026-11), where Playwright 1.56.0 cannot install its browsers.
     # Go back to ubuntu-latest after moving to a Playwright release that supports it.
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # The smoke test takes about a minute, but installing the browsers has taken up to 10 minutes on main
+    # (2026-11-23), which stopped a passing run at the old 10-minute limit.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:

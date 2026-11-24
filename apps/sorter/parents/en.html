@@ -14,7 +14,7 @@
   body { margin: 0 auto; max-width: 820px; padding: 24px 28px 28px; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
   header { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding-bottom: 14px; border-bottom: 3px solid var(--ink); }
   .logo { width: 44px; height: 44px; grid-row: span 2; }
-  .kicker { font: 800 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+  .kicker { font: 800 13px/1 var(--mono); color: var(--soft); }
   h1 { margin: 0; font: 800 28px/1.1 var(--mono); letter-spacing: -.01em; text-wrap: balance; }
   .sub { grid-column: 1 / -1; margin: 6px 0 0; font-size: 16px; }
   .facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -23,7 +23,7 @@
   .facts span:nth-child(3) { background: var(--pink); }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; margin-top: 6px; }
   section { min-width: 0; }
-  h2 { margin: 16px 0 6px; font: 800 13px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  h2 { margin: 16px 0 6px; font: 800 14.5px/1.2 var(--mono); }
   p { margin: 0 0 8px; }
   ol, ul { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 5px; }
   li::marker { font-weight: 800; }
@@ -56,11 +56,11 @@
   <div class="kicker">kidvo · Parents' and teachers' guide</div>
   <h1>Train the Sorter</h1>
   <p class="sub">Your child teaches a tiny AI with examples, and finds out for themselves how one-sided examples make a biased AI.</p>
-  <div class="facts"><span>Ages 7–13</span><span>10 minutes</span><span>Runs entirely in the browser</span></div>
+  <div class="facts"><span>Ages 7–13</span><span>10 minutes</span><span>Runs entirely in the browser</span><span>Can be read aloud</span></div>
 </header>
 <div class="cols">
-  <section><h2>What your child does</h2><ol><li>Labels eight fruits as "apple" or "not apple" to teach SORT-1, a tiny AI.</li><li>Watches SORT-1 sort new fruit and decides each time whether it is right.</li><li>Discovers that SORT-1 thinks green and yellow apples are not apples, and chooses the reason why.</li><li>Teaches SORT-1 again with more varied examples, and sees it improve.</li><li>Optional extra round: picks 8 of 16 fruit to teach SORT-1 from scratch. A mix of apples and fruit that only look like apples gets 6 of 6 and the Curator badge.</li></ol><h2>What it teaches</h2><ul><li><b>AI learns from examples.</b> SORT-1 only knows what it was shown.</li><li><b>One-sided examples make a one-sided AI.</b> The first examples include only red apples, so SORT-1 decides that apples are red. That is bias, and your child finds it before anyone explains it.</li></ul></section>
-  <section><h2>How SORT-1 works</h2><p>SORT-1 uses a real, very small machine-learning method called nearest neighbour. It looks at three things, colour, shape and size, and copies the label of the most similar example it has seen. It always reports high confidence, even when it is wrong. During every test, a strip called "What SORT-1 remembers" shows each example with your child's label and highlights the one it copied, so your child can see why it guessed what it did.</p><h2>For both age bands</h2><p>Younger children enjoy the teaching and the surprise. Older children can go further: why did SORT-1 also think a cherry was an apple? Which examples fixed that?</p></section>
+  <section><h2>What your child does</h2><ol><li>Labels eight fruits as "apple" or "not apple" to teach SORT-1, a tiny AI.</li><li>Watches SORT-1 sort new fruit and decides each time whether it is right.</li><li>Discovers that SORT-1 thinks green and yellow apples are not apples, and chooses the reason why.</li><li>Teaches SORT-1 again with more varied examples, and sees it improve.</li><li>Picks 8 of 16 fruit to teach SORT-1 from scratch: the last step for Investigators, an optional extra round for Explorers. A mix of apples and fruit that only look like apples gets 6 of 6 and the Curator badge.</li></ol><h2>What it teaches</h2><ul><li><b>AI learns from examples.</b> SORT-1 only knows what it was shown.</li><li><b>One-sided examples make a one-sided AI.</b> The first examples include only red apples, so SORT-1 decides that apples are red. That is bias, and your child finds it before anyone explains it.</li></ul></section>
+  <section><h2>How SORT-1 works</h2><p>SORT-1 uses a real, very small machine-learning method called nearest neighbour. It looks at three things, colour, shape and size, and copies the label of the most similar example it has seen. It always reports high confidence, even when it is wrong. During every test, a strip called "What SORT-1 remembers" shows each example with your child's label and highlights the one it copied, so your child can see why it guessed what it did.</p><h2>Two modes</h2><div class="mode ex"><b>Explorer, ages 7–9</b>Shorter lines, and SORT-1 says it is "very sure" instead of giving a percentage. The question about why it went wrong has three answers, each with a picture.</div><div class="mode inv"><b>Investigator, ages 10–13</b>SORT-1 gives its confidence in per cent, and the "why" question has four answers. At the end your child applies the lesson to a real case, an AI that learns faces from one-sided photos, and then picks the examples for SORT-1 as the last step.</div></section>
 </div>
 <div class="talk">
   <h2>Talk about it afterwards</h2>

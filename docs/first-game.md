@@ -50,7 +50,7 @@ Then fill in `apps/my-game/manifest.json`:
 - `name`: up to 32 characters.
 - `description`: the text on your game's card. One or two short sentences a child can read, up to 90 characters.
 - `author.name`: the name children see on your game's window. Letters, digits, spaces and `. _ - '` only.
-- `bands`: `explorers` (7 to 9), `investigators` (10 to 13), or both.
+- `bands`: `explorers` (7 to 9), `investigators` (10 to 13), or both. A game for both reads who is playing from `kidvo.band` (see CONTRIBUTING.md).
 - `skills`: one to three ids from the table above.
 - `color`: your card's colour; `added`: today's date.
 
@@ -62,7 +62,7 @@ Three files hold almost everything:
 - `lang/en.js` holds every text the child sees. Read them with `kidvo.t('key')`, never as strings in the code, so other languages can follow.
 - `icon.svg` is your icon. Shapes only: no scripts, links or embedded images.
 
-**The practice AI.** Games never call a real AI. Use the shared panel from `shell/ask-ai.js`, as the template does: `kidvoAI.create(element, { sparks, text, questions, onFlag })`. Your game writes every answer, including the wrong ones. Three rules make a kidvo game:
+**The practice AI.** Games never call a real AI. Use the shared panel from `shell/ask-ai.js`, as the template does: `kidvoAI.create(element, { face, sparks, text, questions, onFlag })`. Your game writes every answer, including the wrong ones, and draws its AI a face of its own with `kidvo.sprite` (rows of letters, one per pixel). Three rules make a kidvo game:
 
 1. **The child thinks first.** Asking the AI is optional and has a visible cost (sparks, in the template).
 2. **Wrong answers are wrong on purpose** and catchable: easy to spot for Explorers, believable for Investigators.
@@ -75,6 +75,10 @@ kidvo.emit('done', {})                 // once, when a round is over: this grows
 kidvo.emit('judged', { right: true })  // a call the child made
 kidvo.emit('caught', {})               // a wrong AI answer caught (the panel's "Not right?" already sends it)
 ```
+
+**Explorers and Investigators.** The desktop asks once who is playing and tells every game: read `kidvo.band` (`explorers`, 7 to 9, or `investigators`, 10 to 13). Many Explorers are still learning to read, so give them bigger letters (`[data-band="explorers"]` in your CSS), fewer words per step (a shorter text under `<key>_explorers`) and, the first time, a "how to play" card with a picture per rule. A game for both bands shows its own "Who is playing?" card only while `kidvo.band` is `null` and passes the choice on with `kidvo.setBand`; Robot Maze shows the pattern.
+
+**Read aloud.** A switch in the top bar reads the games aloud for children who cannot read yet. Call `kidvo.speak(...)` with what a child must hear to play: a line, a list of lines (the choices) or an element (a card). It does nothing unless the switch is on, and it uses voices on the device only, so never use `speechSynthesis` yourself (CI blocks it). The practice-AI panel reads its own answers; the template reads its question.
 
 **Save progress if you need to** with `kidvo.store.get` and `kidvo.store.set` (up to 32 KB, only in this browser).
 
