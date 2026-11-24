@@ -46,8 +46,8 @@ jobs:
     # Pinned: ubuntu-latest became Ubuntu 26.04 (2026-11), where Playwright 1.56.0 cannot install its browsers.
     # Go back to ubuntu-latest after moving to a Playwright release that supports it.
     runs-on: ubuntu-24.04
-    # The smoke test takes about a minute, but installing the browsers has taken up to 10 minutes on main
-    # (2026-11-23), which stopped a passing run at the old 10-minute limit.
+    # The smoke test takes about a minute. Installing the browsers without the cache below has taken 10 to more than
+    # 20 minutes (2026-11-23/24), which stopped passing runs at the old 10-minute limit.
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -74,8 +74,41 @@ jobs:
       - name: Build the app registry
         run: node scripts/build-registry.mjs
 
+      # The browsers and the Ubuntu packages WebKit needs are cached between runs. On 2026-11-24 the apt mirror sent
+      # those packages at about 100 kB/s, and two runs were cancelled at 20 minutes before any test ran. A cached run
+      # downloads no browser and no package; apt only reads its package lists. The key changes with package-lock.json
+      # (a new Playwright version). A pull request can read main's cache but saves only to its own branch's, so a PR
+      # cannot change what main runs with.
+      - name: Restore the browsers and their system packages
+        id: browsers
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/apt-archives
+          key: browsers-ubuntu-24.04-${{ hashFiles('package-lock.json') }}
+
+      - name: Keep apt's downloads where the cache can find them
+        run: |
+          mkdir -p ~/apt-archives/partial
+          printf 'Dir::Cache::Archives "%s";\nAPT::Keep-Downloaded-Packages "true";\nAcquire::Retries "3";\nAcquire::http::Timeout "30";\n' \
+            "$HOME/apt-archives" | sudo tee /etc/apt/apt.conf.d/99kidvo-cache
+
       - name: Install Chromium and WebKit (Safari's engine)
         run: npx playwright install --with-deps chromium webkit
+
+      # Saved right after the install, so a failing smoke test still leaves a warm cache for the next run.
+      - name: Save the browsers and their system packages
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: sudo chown -R "$(id -u):$(id -g)" ~/apt-archives
+
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/apt-archives
+          key: ${{ steps.browsers.outputs.cache-primary-key }}
 
       - name: Smoke test (desktop boots, every app opens, no JS errors)
         env:
