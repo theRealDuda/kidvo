@@ -37,7 +37,7 @@ export const ALLOWED_EXT = new Set([
 export const TEXT_EXT = new Set(['.html', '.js', '.mjs', '.css', '.json', '.svg', '.txt', '.md']);
 export const RESERVED_IDS = new Set(['shell', 'about', 'contribute', 'registry', 'kidvo', 'apps', 'templates']);
 // Languages a game may offer. The desktop shows the ones it has texts for (shell/i18n.js).
-export const LANGUAGES = ['en', 'hu', 'ro', 'bg', 'cs', 'da', 'de', 'el', 'es', 'et', 'fi', 'fr', 'ga', 'hr', 'it', 'lt', 'lv', 'mt', 'nl', 'pl', 'pt', 'sk', 'sl', 'sv', 'uk'];
+export const LANGUAGES = ['en', 'hu', 'ro', 'ru', 'bg', 'cs', 'da', 'de', 'el', 'es', 'et', 'fi', 'fr', 'ga', 'hr', 'it', 'lt', 'lv', 'mt', 'nl', 'pl', 'pt', 'sk', 'sl', 'sv', 'uk'];
 // Age bands: explorers are 7-9, investigators are 10-13.
 export const BANDS = ['explorers', 'investigators'];
 // AI-literacy skills a learning app can teach. Draft list; the kidvo charter will settle it.
